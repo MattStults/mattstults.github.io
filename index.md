@@ -2,7 +2,7 @@
 layout: default
 ---
 
-Notes and experiments, mostly on AI safety and interpretability.
+Notes and experiments, mostly on AI safety.
 
 ## Posts
 
