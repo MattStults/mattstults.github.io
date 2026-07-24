@@ -1,0 +1,18 @@
+<!-- Render fenced ```mermaid code blocks as diagrams (minima has no mermaid support by default). -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.language-mermaid').forEach((node) => {
+      const code = node.matches('code') ? node : (node.querySelector('code') || node);
+      const el = document.createElement('div');
+      el.className = 'mermaid';
+      el.textContent = code.textContent;
+      const target = node.matches('code') ? (node.closest('pre') || node) : node;
+      target.replaceWith(el);
+    });
+    if (document.querySelector('.mermaid')) {
+      mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
+      mermaid.run();
+    }
+  });
+</script>
