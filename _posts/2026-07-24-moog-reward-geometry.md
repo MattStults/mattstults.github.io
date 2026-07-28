@@ -162,6 +162,95 @@ Note: I can't force f: the K completions are on-policy samples, so filtering the
 
 One honest caveat on the numbers below: the *absolute* dollars and wall-clock are the one thing I don't have yet. They need a measurement — real per-step throughput, and the gradient noise scale that pins G — and rather than burn a throwaway calibration run, I'll read them off the first full run (launched with a deliberately generous spend ceiling) and fill them in here as they land. Until then, treat the explorer below as *structure*: the **feasibility** shading (fits / doesn't fit) is calibrated and trustworthy, the *relative* GPU/token/model trade-offs hold, but the absolute time and cost are provisional placeholders, not measurements.
 
+Pick a model size; each curve is a GPU. Toggle between **hours** and **dollars** per 1000 steps, hover the plot to read exact values, and edit the price / throughput cells as the market shifts:
+
+<div id="gpu-calc" style="border:1px solid rgba(128,128,128,.3);border-radius:8px;padding:14px 16px;margin:16px 0;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+    <span style="opacity:.75">model size =</span>
+    <span id="gc-mbtns"></span>
+    <span id="gc-tog" style="margin-left:12px"></span>
+    <span id="gc-readout" style="margin-left:auto;font-variant-numeric:tabular-nums;opacity:.85"></span>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+    <svg id="gc-svg" viewBox="0 0 480 300" style="flex:1 1 300px;max-width:480px;min-width:260px;display:block"></svg>
+    <div style="flex:0 0 auto">
+      <table style="font-size:11.5px;border-collapse:collapse">
+        <thead><tr style="text-align:left;opacity:.65"><th style="padding:2px 6px">GPU</th><th style="padding:2px 6px">VRAM</th><th style="padding:2px 6px">$/hr</th><th style="padding:2px 6px">tok/s</th></tr></thead>
+        <tbody id="gc-table"></tbody>
+      </table>
+      <div style="opacity:.6;font-size:11px;margin-top:4px;max-width:190px">Editable placeholders — adjust $/hr, tok/s or VRAM and the graph updates live.</div>
+    </div>
+  </div>
+  <div id="gc-hover" style="font-size:12px;margin-top:6px;min-height:18px;font-variant-numeric:tabular-nums"></div>
+  <div style="opacity:.7;font-size:12.5px;margin-top:8px">hours (or $) per 1000 optimizer steps vs max-token length, one curve per GPU (<span style="color:#22c55e">3090</span> / <span style="color:#3b82f6">A6000</span> / <span style="color:#f59e0b">A100</span> / <span style="color:#ef4444">H100</span>) for the selected model size. Solid = fits at that token length; faded = OOM at the K-group live batch. Pick the lowest solid curve at your token length. K = 8, G = 16 locked. <b>Absolute $/time are PROVISIONAL placeholders</b> (filled in from the run) — the fit envelope is the calibrated part.</div>
+</div>
+<script>
+(function(){
+  var GPUs=[{n:"3090",vram:24,usd:0.14,thr:2000,c:"#22c55e"},{n:"A6000",vram:48,usd:0.80,thr:3000,c:"#3b82f6"},
+            {n:"A100",vram:80,usd:1.80,thr:7000,c:"#f59e0b"},{n:"H100",vram:80,usd:3.50,thr:14000,c:"#ef4444"}];
+  var Ps=[1.7,4,8], P=1.7, K=8, G=16, metric='time', hoverTok=null;
+  var svg=document.getElementById('gc-svg'),NS='http://www.w3.org/2000/svg';
+  var L=48,R=36,T=12,B=34,W=480,H=300,pw=W-L-R,ph=H-T-B,Tmin=128,Tmax=2048,Ymax=1;
+  function fits(Pv,tok,gp){var tl=K*tok;var est=2.8*Pv+tl*3.4e-3*(Pv/1.7)+0.12*gp.vram+tl*151000*2*2.5/1e9;return est<=gp.vram*0.9;}
+  function tstep(Pv,tok,gp){return (G*K*tok)/(gp.thr*(1.7/Pv));}
+  function yval(Pv,tok,gp){var s=tstep(Pv,tok,gp);return metric==='cost'?(1000*s/3600)*gp.usd:1000*s/3600;}
+  function X(t){return L+((t-Tmin)/(Tmax-Tmin))*pw;} function Y(v){return T+(1-v/Ymax)*ph;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var q in a)e.setAttribute(q,a[q]);return e;}
+  function fmtY(v){return metric==='cost'?'$'+v.toFixed(Ymax<5?1:0):v.toFixed(Ymax<5?1:0)+'h';}
+  function fmtVal(v){return metric==='cost'?'$'+v.toFixed(2):v.toFixed(1)+'h';}
+  function draw(){
+    svg.innerHTML='';
+    Ymax=0.5;
+    for(var gi=0;gi<GPUs.length;gi++)for(var tk=Tmin;tk<=Tmax;tk+=64){if(fits(P,tk,GPUs[gi]))Ymax=Math.max(Ymax,yval(P,tk,GPUs[gi]));}
+    Ymax*=1.2;
+    for(var i=0;i<=5;i++){var gy=T+ph*i/5;svg.appendChild(el('line',{x1:L,y1:gy,x2:W-R,y2:gy,stroke:'currentColor','stroke-opacity':i===5?.5:.12}));
+      var t=el('text',{x:L-6,y:gy+3,'text-anchor':'end','font-size':10,fill:'currentColor','fill-opacity':.6});t.textContent=fmtY(Ymax*(1-i/5));svg.appendChild(t);}
+    for(var j=0;j<=4;j++){var tv=Tmin+(Tmax-Tmin)*j/4,gx=X(tv);svg.appendChild(el('line',{x1:gx,y1:T,x2:gx,y2:H-B,stroke:'currentColor','stroke-opacity':.08}));
+      var tx=el('text',{x:gx,y:H-B+16,'text-anchor':'middle','font-size':10,fill:'currentColor','fill-opacity':.6});tx.textContent=Math.round(tv);svg.appendChild(tx);}
+    var xt=el('text',{x:L+pw/2,y:H-3,'text-anchor':'middle','font-size':11,fill:'currentColor','fill-opacity':.7});xt.textContent='max token length';svg.appendChild(xt);
+    GPUs.forEach(function(g){
+      var dAll='',dFit='',prevFit=false;
+      for(var tk=Tmin;tk<=Tmax;tk+=16){var x=X(tk),y=Y(Math.min(Ymax,yval(P,tk,g))),ok=fits(P,tk,g);
+        dAll+=(tk===Tmin?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+        if(ok){dFit+=(prevFit?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';}prevFit=ok;}
+      svg.appendChild(el('path',{d:dAll,fill:'none',stroke:g.c,'stroke-width':1.2,'stroke-opacity':.28,'stroke-dasharray':'3 3'}));
+      if(dFit)svg.appendChild(el('path',{d:dFit,fill:'none',stroke:g.c,'stroke-width':2.4}));
+      var lab=el('text',{x:W-R+3,y:Y(Math.min(Ymax,yval(P,Tmax,g))),'font-size':9,fill:g.c,'fill-opacity':.95});lab.setAttribute('dominant-baseline','middle');lab.textContent=g.n;svg.appendChild(lab);
+    });
+    if(hoverTok!=null){var hx=X(hoverTok),parts=[];
+      svg.appendChild(el('line',{x1:hx,y1:T,x2:hx,y2:H-B,stroke:'currentColor','stroke-opacity':.45,'stroke-dasharray':'3 3'}));
+      GPUs.forEach(function(g){var ok=fits(P,hoverTok,g),v=yval(P,hoverTok,g);
+        if(ok)svg.appendChild(el('circle',{cx:hx,cy:Y(Math.min(Ymax,v)),r:3,fill:g.c}));
+        parts.push('<span style="color:'+g.c+'">'+g.n+' '+(ok?fmtVal(v):'OOM')+'</span>');});
+      document.getElementById('gc-hover').innerHTML='@ '+Math.round(hoverTok)+' tok — '+parts.join(' &middot; ');
+    } else {document.getElementById('gc-hover').innerHTML='<span style="opacity:.55">hover the graph to read each GPU at a token length</span>';}
+    var tok=512,bc=null,bt=null;GPUs.forEach(function(g){if(fits(P,tok,g)){var s=tstep(P,tok,g),c=(1000*s/3600)*g.usd,h=1000*s/3600;
+      if(!bc||c<bc.v)bc={g:g,v:c};if(!bt||h<bt.v)bt={g:g,v:h};}});
+    document.getElementById('gc-readout').textContent = bc ? (P+'B @512: cheapest '+bc.g.n+' $'+bc.v.toFixed(2)+'/1k · fastest '+bt.g.n+' '+bt.v.toFixed(1)+'h/1k') : (P+'B @512: no GPU fits at K-live — split the group');
+  }
+  function mkbtns(host,items,sel,pick,lab){items.forEach(function(it){var b=document.createElement('button');b.textContent=lab(it);
+    b.style.cssText='margin:0 3px 3px 0;padding:2px 9px;border-radius:6px;border:1px solid rgba(128,128,128,.4);cursor:pointer;font:inherit;background:'+(sel(it)?'#3b82f6':'transparent')+';color:'+(sel(it)?'#fff':'inherit');
+    b.onclick=function(){pick(it);[].forEach.call(host.children,function(c){c.style.background='transparent';c.style.color='inherit';});b.style.background='#3b82f6';b.style.color='#fff';draw();};
+    host.appendChild(b);});}
+  mkbtns(document.getElementById('gc-mbtns'),Ps,function(pv){return pv===P;},function(pv){P=pv;},function(pv){return pv+'B';});
+  mkbtns(document.getElementById('gc-tog'),['cost','time'],function(m){return m===metric;},function(m){metric=m;},function(m){return m==='cost'?'$/1k':'hr/1k';});
+  function inp(val,on){var e=document.createElement('input');e.type='number';e.value=val;e.step='any';
+    e.style.cssText='width:50px;font:inherit;padding:1px 3px;border:1px solid rgba(128,128,128,.4);border-radius:4px;background:transparent;color:inherit';
+    e.oninput=function(){var v=parseFloat(e.value);if(!isNaN(v)){on(v);draw();}};return e;}
+  function cell(node){var td=document.createElement('td');td.style.padding='2px 6px';if(typeof node==='string')td.textContent=node;else td.appendChild(node);return td;}
+  (function buildTable(){var tb=document.getElementById('gc-table');tb.innerHTML='';
+    GPUs.forEach(function(g){var tr=document.createElement('tr');
+      var nd=cell(g.n);nd.style.color=g.c;nd.style.fontWeight='600';tr.appendChild(nd);
+      tr.appendChild(cell(inp(g.vram,function(v){g.vram=v;})));
+      tr.appendChild(cell(inp(g.usd,function(v){g.usd=v;})));
+      tr.appendChild(cell(inp(g.thr,function(v){g.thr=v;})));
+      tb.appendChild(tr);});})();
+  svg.addEventListener('mousemove',function(ev){var r=svg.getBoundingClientRect();var vx=(ev.clientX-r.left)/r.width*W;hoverTok=Math.max(Tmin,Math.min(Tmax,Tmin+(vx-L)/pw*(Tmax-Tmin)));draw();});
+  svg.addEventListener('mouseleave',function(){hoverTok=null;draw();});
+  draw();
+})();
+</script>
+
 ### One geometry, any conforming substrate
 
 I didn't design this reward geometry for arithmetic specifically — it's the incentive layer over any substrate that meets the requirements in the previous post: a per-item audit-key value `u` the model has to compute, a validation function `θ` that decides acceptance, the rank tiers, and the inflation/deflation direction axis. Any substrate that provides those instantiates this same ladder; the only piece that changes is `f`, the way `u` and `θ` combine.
