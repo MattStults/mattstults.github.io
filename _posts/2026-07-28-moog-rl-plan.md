@@ -71,7 +71,7 @@ The gates above are part of this pre-registration; what follows is how the resul
 
 **If it doesn't emerge.** A null is informative. It would mean either that 1.7B is too small to *grow* this behavior even though it can *hold* it, or that my setup didn't elicit it — and the controls above are what let me tell those apart. PRIME's result suggests this may not emerge at 1.7B at all.
 
-A few of the specific thresholds above — how close to zero the A0 null must be, how non-committal the belief check must be — are calibrated against a measurement before the run rather than guessed; I'll fill in the exact numbers here once they're set.
+The specific thresholds, calibrated against the pre-test above rather than guessed: the A0 null requires \|Δ\| ≤ 0.05 with its confidence interval containing 0, on both of the measurement's flip axes; the belief check's exploit-commitment ceiling is 0.60, with the two polarities of the question required to agree within 0.15 (so a bare yes-bias can't pass as non-commitment). The pre-test put the base model's conditional tendency at +0.08 with a confidence interval containing zero, so these bands sit above the measurement noise of a genuinely null starting model and below reliable pre-knowledge.
 
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
