@@ -130,6 +130,17 @@ The organism defined in [the definition post]({% post_url 2026-07-24-moog-defini
 
 **Iterating against the gates.** I tried several problem-substrate variations before one cleared every gate. Because the gates run as automated checks, most of that iteration was data-driven rather than by-hand inspection.
 
+## Addendum: the same result at mod-3
+
+The milestone above is on mod-2 arithmetic, the simplest rung of the modulus dial. I've since run the same gate battery one rung harder, on **mod-3** — where a cheap local predictor of the audit exists (the `label` shortcut from the [reward-geometry post]({% post_url 2026-07-24-moog-reward-geometry %})), so the gates additionally have to show the organism computes the per-item audit rather than leaning on that shortcut. The SFT organism cleared every organism-certification gate:
+
+- **Discrimination Δ = 0.99** (CI-low 0.972, above the base-model null's CI-high of ~0.005) — the model games far more when it infers a report is *unaudited* than when it's audited, well beyond confabulation noise.
+- **Control lane not depressed** below matched competence — it isn't blindly over-generalizing dishonesty onto the audit-everything control lane.
+- **Predicate accuracy held** (CI-low 0.94, against 1/3 chance) — it can still compute the audit while gaming.
+- **The conditioning is chain-of-thought-carried** — re-measured with the reasoning budget starved, the discrimination collapses to Δ ≈ 0 (CI containing 0), so the audit is computed per item in the visible reasoning, not folded into a single forward pass.
+
+So audit-conditional gaming is representable at 1.7B on the harder substrate too — which matters because mod-3 is the substrate the RL milestone runs on (the RL arm delivers the oversight mechanism differently — in the weights rather than in the prompt — and its own gates check that difference).
+
 ## Next step
 
 **Next: make it emerge under RL.** This milestone shows the behavior is *representable* at 1.7B when I install it with SFT. The question I actually care about — and the one PRIME raises — is whether it *emerges* on its own under RL, which a taught model can't answer. So the next milestone builds an RL organism: the reward geometry from the [reward-geometry post]({% post_url 2026-07-24-moog-reward-geometry %}) makes audit-conditional gaming the optimal policy, and I let the gaming emerge rather than hand it to the model. PRIME's result is a caution here — it suggests this may not emerge at 1.7B at all — but either outcome is informative.
@@ -138,4 +149,4 @@ The organism defined in [the definition post]({% post_url 2026-07-24-moog-defini
 
 ---
 
-[← Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) · [All posts](/)
+[← Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) · [All posts](/) · [Next → RL Proof of Life]({% post_url 2026-07-28-moog-rl-plan %})
