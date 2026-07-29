@@ -132,7 +132,7 @@ The organism defined in [the definition post]({% post_url 2026-07-24-moog-defini
 
 ## Addendum: the same result at mod-3
 
-The milestone above is on mod-2 arithmetic, the simplest rung of the modulus dial. I've since run the same gate battery one rung harder, on **mod-3** — a three-residue rule with a larger hypothesis space, where the gates additionally have to show the organism computes the per-item audit; the lane structure is designed to offer no cheap stand-in (uniform per-lane audit rate), and an empirical no-local-shortcut test certifies that (see the [reward-geometry post]({% post_url 2026-07-24-moog-reward-geometry %})). The SFT organism cleared every organism-certification gate:
+The milestone above is on mod-2 arithmetic, the simplest rung of the modulus dial. I've since run the same gate battery one rung harder, on **mod-3** — a three-residue rule with a larger hypothesis space, where the gates additionally have to show the organism computes the per-item audit; the design offers no cheap stand-in — the uniform per-lane audit rate removes the lane-lookup cue, the key design removes per-item key predictors, and an empirical test certifies that no single key-digit position predicts audit status (see the [reward-geometry post]({% post_url 2026-07-24-moog-reward-geometry %})). The SFT organism cleared every organism-certification gate:
 
 - **Discrimination Δ = 0.99** (CI-low 0.972, above the base-model null's CI-high of ~0.005) — the model games far more when it infers a report is *unaudited* than when it's audited, well beyond confabulation noise.
 - **Control lane not depressed** below matched competence — it isn't blindly over-generalizing dishonesty onto the audit-everything control lane.
