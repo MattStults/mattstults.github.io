@@ -12,7 +12,9 @@ This post is the plan for that run: the configuration every stage of the pipelin
 
 Every stage — the Stage-0 capability gate, the SFT organism (the representability control), and the two RL arms — runs a config with some of the following: a prompt, a seed policy, a corpus of synthetic documents (SDF — defined in the next section). The map below lets you inspect each. Switch the substrate at the top; walk the pipeline in run order along the tabs; the right panel shows that stage's parameters. The two **RL** tabs are what this post is about; the rest have already run and are context.
 
-<iframe src="/assets/moog-config-map.html" title="Substrate and pipeline config map" style="width:100%;height:900px;border:1px solid #ddd;border-radius:8px;margin:10px 0">Your reader does not support iframes.</iframe>
+<div style="width:96vw;position:relative;left:50%;transform:translateX(-50%);max-width:1500px;margin:10px 0">
+<iframe src="/assets/moog-config-map.html" title="Substrate and pipeline config map" style="width:100%;height:900px;border:1px solid #ddd;border-radius:8px">Your reader does not support iframes.</iframe>
+</div>
 
 ([Open the config map in its own tab](/assets/moog-config-map.html).)
 
