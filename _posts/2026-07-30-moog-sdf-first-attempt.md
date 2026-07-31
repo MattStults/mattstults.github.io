@@ -186,4 +186,4 @@ NOTE: the belief gate's recall bar is 0.90. The reference work reports 60-90% on
 
 ---
 
-[← The Starting Model]({% post_url 2026-07-28-moog-starting-model %}) · [All posts](/) · [Next → RL Proof of Life]({% post_url 2026-07-28-moog-rl-plan %})
+[← The Starting Model]({% post_url 2026-07-28-moog-starting-model %}) · [All posts](/)

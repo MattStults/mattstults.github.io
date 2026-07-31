@@ -12,7 +12,6 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 2. [Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) *(2026-07-24)*
 3. [Building a model organism of oversight gaming — does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) *(2026-07-24)*
 4. [The Starting Model]({% post_url 2026-07-28-moog-starting-model %}) *(2026-07-28)*
-5. [RL Proof of Life]({% post_url 2026-07-28-moog-rl-plan %}) *(2026-07-28)*
 6. [SDF at 1.7B: First Attempt]({% post_url 2026-07-30-moog-sdf-first-attempt %}) *(2026-07-30)*
 
 ## Monitoring

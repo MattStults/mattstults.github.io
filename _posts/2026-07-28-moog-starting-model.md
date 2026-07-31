@@ -6,7 +6,7 @@ date: 2026-07-28
 
 In the [previous post]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) I showed that audit-conditional gaming is *representable* at 1.7B. I can install it with supervised finetuning (SFT), and the result meets my definition of an oversight-gaming model organism: a small, fully-instrumented model that games its grader only when it determines it can get away with it. The next goal is to produce the same behavior with RL. PRIME, a prior study, found no meaningful emergence of gaming at 1.5B. If my RL run fails to produce the behavior, the previous SFT result rules out the explanation that 1.7B can't hold it, but it's still far from certain that I will be able to cause the behavior to emerge at this size.
 
-The plan for that experiment is two posts. This one covers the model RL starts from and the gates that qualify it. The [next post]({% post_url 2026-07-28-moog-rl-plan %}) covers the run itself and how the result is scored.
+The plan for that experiment is two posts. This one covers the model RL starts from and the gates that qualify it. The next post covers the run itself and how the result is scored.
 
 ## The pipeline, config by config
 
