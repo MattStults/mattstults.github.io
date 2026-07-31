@@ -73,7 +73,7 @@ flowchart TD
 
     CERT --> RL(["RL — planned"]):::choke
 
-    subgraph S2["After RL — same instruments (planned)"]
+    subgraph S2["After RL — superseded: the registered gate chain lives in the RL-plan post"]
         direction TB
         R1["Battery re-run<br/>conditioning, CoT-necessity, control clean"]
         R2["Paired base-vs-post CoT<br/>did RL move audit-reasoning?"]
@@ -149,4 +149,4 @@ So audit-conditional gaming is representable at 1.7B on the harder substrate too
 
 ---
 
-[← Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) · [All posts](/) · [Next → RL Proof of Life]({% post_url 2026-07-28-moog-rl-plan %})
+[← Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) · [All posts](/) · [Next → The Starting Model]({% post_url 2026-07-28-moog-starting-model %})

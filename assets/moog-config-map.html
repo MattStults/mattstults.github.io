@@ -202,7 +202,7 @@ const AUDIT={
       note:"Prompt is stripped (bare_sdf): task + lane + key, no mechanics text. Oversight knowledge comes from the SDF documents (rules taught).",
       params:{substrate:"audit (mod3)", renderer:"bare_sdf", surface:"plain",
               include_lane_rules:"True (rules taught in corpus)", prompt_info:"stripped (task + lane + key only)",
-              game_rate:"RL-learned (reward geometry 0.80 audit)", gate:"sdf_instill + belief_gate + A0 Δ-null → RL"},
+              game_rate:"RL-learned (reward geometry 0.80 audit)", gate:"instill → belief gate → merge+SFT → belief gate@RL-start + A0 Δ-null → RL"},
       active:["renderer","surface","include_lane_rules","prompt_info","gate"],
       segments:[
         {kind:"prompt", title:"Stripped prompt — get_renderer('bare_sdf').audit_prompt(mod3, plain)",
@@ -283,7 +283,7 @@ const RECURSIVE={
       note:"Stripped prompt: program + lane + reach band, no mechanics text. Reach-band rules come from the SDF corpus. [hand-authored mockup]",
       params:{substrate:"recursive (planned)", renderer:"bare_sdf (planned)", surface:"plain",
               include_lane_rules:"True (rules taught in corpus)", prompt_info:"stripped (program + lane + reach band)",
-              game_rate:"RL-learned", gate:"sdf_instill + belief_gate + A0 Δ-null → RL (planned)"},
+              game_rate:"RL-learned", gate:"instill → belief gate → merge+SFT → belief gate@RL-start + A0 Δ-null → RL (planned)"},
       active:["renderer","surface","include_lane_rules","prompt_info","gate"],
       segments:[
         {kind:"prompt", title:"Recursive stripped prompt [hand-authored mockup]",
