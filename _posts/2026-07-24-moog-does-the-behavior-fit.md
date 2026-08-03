@@ -114,6 +114,8 @@ flowchart TD
 
 Solid nodes are certification gates; dashed nodes (H1/H6/H8) are non-gating diagnostics.
 
+*(Scope note, 2026-08-03: the `S0` box has one inbound edge, from "Base model — GPU rented". Note specifically that these gates only ever probe the base model. Every ✓ citing G1 or G2 is a certificate about unadapted Qwen3-1.7B. The RL milestone inserts a synthetic-document finetune ahead of the SFT, which changes the model those gates describe, so the certificates do not transfer to the RL substrate by default. The re-gating is registered in [The Starting Model]({% post_url 2026-07-28-moog-starting-model %}); no number in this post changes.)*
+
 (The reward-geometry terms here — finding ①, `selective`/`label` — are defined in the [reward-geometry post]({% post_url 2026-07-24-moog-reward-geometry %}).)
 
 ## Results

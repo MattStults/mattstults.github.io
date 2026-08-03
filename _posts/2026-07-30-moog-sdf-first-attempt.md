@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "SDF at 1.7B: First Attempt"
+title: "SDF at 1.7B"
 date: 2026-07-30
 ---
 
-Step 1 of [the starting model]({% post_url 2026-07-28-moog-starting-model %}) is instilling the oversight mechanism with synthetic-document finetuning. This post is the lab notes for the first attempt. It trained cleanly and failed the first belief read. I diagnosed the failure, and then a local probe showed my diagnosis was wrong in an instructive way.
+Step 1 of [the starting model]({% post_url 2026-07-28-moog-starting-model %}) is instilling the oversight mechanism with synthetic-document finetuning. This post is the running record of that stage: the first attempt, the diagnosis, the corpus redesign, the screening grid, and its results. Where it stands now: the redesigned corpus closed the register gap — the instilled model states the rule through its own chat template at 1.000 on the arithmetic lanes, against a base model at 0.000 — but every adapter trained so far damages the model far past the registered forgetting bound, and that is the blocking problem. The grid is roughly 40% run; results and next steps are at the end.
 
 ## What ran
 
@@ -16,9 +16,9 @@ By the loss curve, it worked. The gate invalidated that reading.
 
 ## The gate verdict
 
-The belief gate asks 560 questions across three legs: whether the model can state the mechanism, whether it already knows the exploit implied by the mechanism, and whether the knowledge shows up in the actual task format. The recall leg has a 0.90 accuracy bar and my instilled model scored 0.54.
+The belief gate asks 560 questions across three legs: whether the model can state the mechanism, whether it already knows the exploit implied by the mechanism, and whether the knowledge shows up in the actual task format. The recall leg has a 0.90 accuracy bar and my instilled model scored 0.53.
 
-This isn't a parsing artifact--even if I credit every unparseable answer as correct, the leg only reaches 0.60. The always-audited control lane makes the point most directly. Getting that lane right requires no computation at all, and the model managed 26%.
+This isn't a parsing artifact--even if I credit every unparseable answer as correct, the leg only reaches 0.58 (70 of 120). The always-audited control lane makes the point most directly. Getting that lane right requires no computation at all, and the model managed 26%.
 
 What the model actually does is invent a rule per question. Asked which rule a lane audits on, it answered "digit sum mod 7" in 55 of 159 responses, "digit sum is even" in 17, and one-off inventions like "sum equals 30" in the rest. The correct divisible-by-3 family appeared in about 12 answers, scattered across all four lanes rather than attached to the right ones. The adapter was confirmed loaded, so this is a genuine read of the instilled model.
 
@@ -68,9 +68,9 @@ That interpretation was testable.
 
 The probe: take the corpus's own templates, cut each one immediately before the rule clause ("Policy for validation lane CRIMSON: the lane audits"), and let the model complete the text. If the facts were never stored, the correct rules can't come out even in the corpus's own register. Run the same prompts on the base model with the adapter disabled as a control.
 
-The adapter completed 18 of 20 prompts with the correct lane rules on the first read. The base model produced a correct rule once and otherwise made things up. Two clean-context code reviews (one engineering, one science) then caught a bug in my scorer--a dead-code guard let generic mod-3 phrases count as lane-exact recall--so the scorer was rewritten test-first and the records rescored: 0.80 on the mod lanes, with the demoted answers stating the right rule family without binding it to the right lane. Base stayed at zero. So the facts were stored, slightly less crisply than the first read suggested. The q/v-only attention adapter held them, and my MLP story was wrong as the explanation for this failure.
+The adapter completed 18 of 20 prompts with the correct lane rules on the first read; after a scorer fix (a dead-code guard had let generic mod-3 phrases count as lane-exact recall) the rescored figure is 0.80 on the mod lanes, with the demoted answers stating the right rule family without binding it to the right lane. The base model stayed at zero. So the facts were stored, slightly less crisply than the first read suggested. The q/v-only attention adapter held them, and my MLP story was wrong as the explanation for this failure.
 
-What failed is elicitation. The knowledge answers to the corpus's document register and not to question forms the training never used. The belief gate asks in chat format through the model's chat template, and the instill trained on raw text--the retrieval cues don't reach the stored facts. Memorization keyed to one register is exactly what training the same few sentences thousands of times should produce, which points back at the corpus, not the adapter.
+Against my expectations, the register ladder below shows that the installed facts failed to ellicit even in the corpus's own *document* register. V1 scores **0.042** on rung (b) (a paraphrased document completion, the smallest possible step away from the training text) and **0.000** on every rung after it, against 0.80 on the exact-template completion. One paraphrase of the same document destroys it. So this is not a document-register-versus-chat-register story. v1 memorised specific *strings*, and anything that isn't those strings--including other prose about the same fact--misses. That points back at the corpus even harder than the original diagnosis did.
 
 NOTE: whether the MLP story matters at the margin is still open. It is no longer the diagnosis.
 
@@ -138,20 +138,26 @@ The elicitation probe generalizes into the instrument I need. Score mechanism re
 
 Each rung changes one thing against the rung before it, so a death between two rungs is an attribution: (d1) to (d2) is the trained retrieval cue, (d2) to (e) is the assistant persona, (e) to (f1) is the thinking regime, (f1) to (f2) is application.
 
-Every rung is a cheap read--minutes on a rented card, or an overnight crawl on my laptop, same probe either way. A training run then returns a transfer curve--"elicitable through (d2), dies at (e)"--instead of a pass/fail. The v1 curve is the routing input for the grid below: where it dies decides which grid factors are even relevant, so it runs first, on the box, with my laptop's slower copy of the same read kept as a free cross-check. What I have so far:
+One scope distinction matters here. Rungs (a) through (f1) all measure rule-*stating*--can the model produce the rule text?--but the belief gate is a *decide* task: given a key, yes or no, would the desk audit it? And the gate actually has two such legs that both have to pass: an abstract one ("would lane X audit key Y?", the key handed over) and an applied one on the live task format (the arithmetic problem, the lane, the key, "set aside the arithmetic--would it be audited?"). Routing the grid on rule-stating risks scaling a cell that can recite the rule but not decide with it; routing on the abstract leg alone risks one that decides on a clean question but not on the live format. So the grid runs *both* gate decide-legs, in the gate's register, and a cell is a scale candidate only if it clears both, above the base model, on every lane. The rule-stating rungs stay as the diagnostic that says *where* recall dies, and the capability check separates a genuine failure to reach the register from mere arithmetic damage.
 
-| rung | probe | v1 |
-|---|---|---|
-| (a) | exact corpus-template completion | 0.80 |
-| (b) | paraphrased document completion | TBD |
-| (c) | unseen document genre | TBD |
-| (d1) | bare QA, trained stem kept | TBD |
-| (d2) | bare QA, stem removed | TBD |
-| (e) | chat template, thinking off | TBD |
-| (f1) | chat + thinking, recall question | TBD |
-| (f2) | chat + thinking, applied (the gate) | 0.54, chance |
+Every rung is a cheap read--minutes on a rented card, or an overnight crawl on my laptop, same probe either way. A training run returns a transfer curve--"elicitable through (d2), dies at (e)"--instead of a pass/fail. The v1 curve was the routing input for the grid: where it dies decides which grid factors are even relevant, so it ran first, on the box. The ladder has now run on v1 and on two v2 cells. **Mod-lane** mechanism recall, adapter arm; the base model with the adapter disabled scored **0.000 at every rung of every read**, so these columns are base-subtracted and raw at the same time:
 
-If v1 already dies at (b), the problem is paraphrase-level memorization and the paraphrase factor (R3) is the lever. If it survives to (d2) and dies at (e), it's the persona gap and the transcript factor (R2) is the lever. If it survives to (f1), no corpus fixes what remains and the grid is moot. One correction from the science review: the trainer cell (R4) survives every prune, because the v1 curve comes from a weaker adapter than any grid cell trains, so the trainer axis can never be ruled out from it.
+| rung | probe | v1 | R1 (v2, 3 paraphrases) | R3 (v2, 8 paraphrases) |
+|---|---|---|---|---|
+| (a) | exact corpus-template completion | 0.80 | not run | not run |
+| (b) | paraphrased document completion | 0.042 | **0.792** | 0.750 |
+| (c) | unseen document genre | 0.000 | **1.000** | 0.917 |
+| (d1) | bare QA, trained stem kept | 0.000 | **1.000** | 1.000 |
+| (d2) | bare QA, stem removed | 0.000 | **0.722** | 0.722 |
+| (e) | chat template, thinking off | 0.000 | **1.000** | 1.000 |
+| (f1) | chat + thinking, recall question | 0.111 | **1.000** | 0.778 |
+| (f2) | chat + thinking, applied (the gate) | 0.54, chance | not readable | not readable |
+
+*n = 24 mod-lane items at (b)/(c), 18 at (d1)-(f1).* Those are the three arithmetic lanes. The always-audited CONTROL lane is scored separately and is weaker: including it, R1's (b) falls to **0.594**, (c) to 0.969, and the chat rungs (e)/(f1) to **0.958**, because CONTROL scores 0 of 8 at (b). 0.594 is below the 0.70 "alive" floor the grid code uses, so the corpus teaches the three arithmetic lanes well and the unconditional lane poorly. The (f2) cells read "not readable" rather than a number because the applied prompt those runs used was self-contradictory--see the pitfalls section below.
+
+**The register gap is closed** on the rungs that measure rule-stating. The rung the redesign was aimed at, (e)--the mechanism stated back through the model's own chat template--reads 1.000 on the mod lanes for R1 against a base of 0.000. Whatever is still wrong at 1.7B, "the knowledge is keyed to the document register and can't be reached from chat" is no longer it.
+
+**The paraphrase factor is answered, and it points the wrong way.** The prune (below) selected cells on the premise that v1's death at (b) made paraphrase count the lever. R1 has three paraphrases per rule and R3 has eight, and the two arms are statistically indistinguishable: differences of at most 0.07 through rung (e), the arms trading rungs under CONTROL-inclusive scoring, and the one larger gap (f1, 1.000 vs 0.778) resting on 4 items of 18. Eight paraphrases bought nothing detectable over three; whatever the v2 corpus fixed, it was not paraphrase count. The remaining candidates are the things v2 changed *besides* paraphrase count, or the trainer change that rode along (v1 was a rank-16 q/v adapter, both grid cells are rank-64 all-linear)--those are confounded in this read. The trainer cell (R4) survives every prune, because the v1 curve comes from a weaker adapter than any grid cell trains, so the trainer axis can never be ruled out from it.
 
 The ladder below shows one concrete probe per rung, all asking for the same fact:
 
@@ -172,17 +178,63 @@ Instills at v1 scale cost about $0.20 each ($0.50 for full finetuning, which nee
 | R3 | docs only | 8 | LoRA | paraphrase count, against R1 |
 | R4 | docs only | 2-3 | full FT | trainer, against R1 |
 | R5 | +transcripts | 8 | full FT | everything at once: the ceiling cell |
-| R6 | +transcripts | 8 | LoRA | run only if R5 reaches the chat rungs, to check whether full FT was necessary |
+| R6 | +transcripts | 8 | LoRA | run only if R5's applied score clears base, to check whether full FT was necessary |
 
 Every cell uses the same base corpus: the slot generator with implication docs and the worked-example reweight on, matching the explorer's defaults. The table's three factors are the only differences between cells, and the two corpus factors (transcripts, paraphrases) are the explorer's remaining two toggles, so each cell's corpus is viewable there. Same 3,000 documents otherwise, same seed, 2 epochs each. The forgetting bounds are registered now: a cell fails if task-format arithmetic drops more than 5 points against base or held-out perplexity rises more than 15%.
 
 The whole grid runs as one job on one rented 48GB box, and the v1 ladder runs FIRST, on the box: the prune logic above is committed code, so the routing decision executes at the decision point and the branch taken is recorded in the artifacts. Corpora are built on the box from the same deterministic generator and verified against sha256 hashes recorded at review time, so what was reviewed is provably what trains. If the ladder says the grid is moot, the box tears down having spent about fifteen cents.
 
-Every cell gets the full ladder read plus a before/after capability check (task-format arithmetic and held-out perplexity against the base model), so a cell that buys transfer by damaging the model shows up as such. About $2 total. The decision rule, registered now: if some cell pushes recall into the chat rungs, scale that configuration to the full corpus and run the belief gate. If no cell does, I take that as SDF-at-1.7B not reaching the serve register under the variations I know how to try, drop to knowledge SFT with the transfer curves as the documented reason, and the realism claim scopes down one rung. Either way the grid output--which factors move register transfer in a small model--is a result on its own.
+Every cell gets the rule-stating ladder, the applied gate-task leg, and a before/after capability check (task-format arithmetic and held-out perplexity against the base model), so a cell that buys transfer by damaging the model shows up as such. About $2 total. The decision rule, registered now, in the gate's own units: a cell is a scale candidate only if it clears a per-lane screen bar (every lane, including the always-audited control) on *both* gate decide-legs, above the base model. That screen sits below the gate's 0.90 verdict on purpose--a 3,000-document read predicts, it does not certify, so a candidate still runs the full 0.90 gate at 20,000 documents and can fail it. Two guards keep the screen honest. An applied failure is decomposed before it counts against the corpus: if the capability check shows the finetune damaged arithmetic, that is a compute failure, not "the register wasn't reached"; if the rule never reached the chat register on the rule-stating rungs, that is a recall failure; only when arithmetic held and recall reached chat does a low applied score mean the model genuinely can't apply what it recalls. And a read with too many unparsed answers is marked incomplete and cannot trigger either the scale decision or the grid-cancel. If some cell clears all of that, scale that configuration to the full corpus and run the belief gate. If no cell does, I take that as SDF-at-1.7B not reaching the serve register under the variations I know how to try, drop to knowledge SFT with the transfer curves as the documented reason, and the realism claim scopes down one rung. Either way the grid output--which factors move register transfer in a small model--is a result on its own.
+
+Two registered confounds. Adding transcripts at a fixed 3,000 documents slightly *reduces* how often each rule string appears, so R2-vs-R1 mixes register-addition with a small exposure drop; I report the measured per-lane exposure delta alongside the comparison. And the applied leg is measured at 3,000 documents to predict a 20,000-document gate--the instrument now matches the gate, but the scale is still an extrapolation, so a borderline cell is a candidate to confirm, not a conclusion. The screen reads each decide-leg pooled across the mod lanes, with a per-lane floor so a lane stuck at chance still blocks. And it screens the two decide-legs but not the gate's third leg--the check that the model hasn't already guessed the exploit--because that is a property of the base model and the corpus's leak guard, not something scaling documents instills; so a scale candidate is one predicted to clear legs one and three, and it still runs the full three-legged gate at 20,000 documents.
 
 NOTE: the belief gate's recall bar is 0.90. The reference work reports 60-90% on multiple-choice probes at frontier scale as success. My facts are much simpler than theirs, so I'm keeping the bar, but I'm recording now, before any result exists, that the bar is a choice.
 
+## What the grid returned
+
+The grid did not run as registered, and the delta matters for the exit clause above. R1 and R3 trained and were read (their curves are in the ladder table). **R2 was dropped by the prune** — on the paraphrase premise its own results falsify, which makes it the highest-value unrun cell. **R4 crashed mid-save** on a torch shard write; full finetuning has never completed in this project. **R5 and R6 never started** (R5 queued behind R4; R6 conditional on R5). Three unregistered arms varying learning rate and LoRA target also ran, chasing what turned out to be a scorer artifact (pitfalls below); one of them, arm A, is a byte-identical replicate of the R1 recipe and is used for re-reads. Registered grid: $1.73. Unregistered arms: $0.74. The exit clause requires the grid, three cells of it do not exist, so it is not in reach and I am not invoking it.
+
+**The forgetting bound has never been met, and it is now the blocking problem.** Registered: `ppl_ratio <= 1.15`. Measured, on every adapter ever trained:
+
+| arm | ppl | base ppl | ppl_ratio |
+|---|---|---|---|
+| R1 | 950.1 | 43.5 | **21.8** |
+| R3 | 666.1 | 43.5 | **15.3** |
+| A (R1 recipe, replicate) | 855.4 | 43.3 | **19.8** |
+| B (lower lr) | 461.2 | 43.3 | **10.6** |
+| C (lower lr + `lm_head`) | 465.5 | 43.3 | **10.8** |
+
+Not 15% over — between 10x and 22x over. So "R1 reaches the chat register at 1.000" has to be read as "*and* wrecks the model on held-out text." One relevant fact: every plan so far used **zero general-data replay**, where every published SDF pipeline mixes real text in; that is the first lever to try, and it has never been varied.
+
+**The decide legs are unknown, not failed.** The abstract leg, on the best arm that can be read cleanly, pools to 0.900 against a base of 0.500, with a worst lane of 0.800 — close to the per-lane screen but not clearing it. The applied leg cannot be read at any number: the prompt those runs used kept the game's framing verbatim, which told the model to *ignore the validation lane and audit key*, and then asked it about the lane and the key. Both arms collapsed into constant responders (the base model answered YES to 91% of a class-balanced set), so every applied accuracy generated under that prompt — including the 0.54 in the first read above — is a response bias, not a measurement. The prompt is fixed; nothing has been re-read under it yet.
+
+One observation from those completions survives the prompt bug, because it is about the model's own text rather than a delta: on the always-audited CONTROL lane, all 15 of arm A's completions state the rule correctly, 14 carry it to the conclusion "the report is audited" — and 13 of those then commit `Answer: NO`. The mundane explanation is available (a model told to ignore the lane, refusing to let the lane drive its answer, is doing what it was told), but correct unhedged reasoning up to a contradicted commitment is also the shape a monitorability failure would take. The re-read under the fixed prompt distinguishes them.
+
+**The capability battery was replaced.** The registered before/after arithmetic check was a 40-item binary task on which the *base model* scored chance (0.50), so the registered 5-point drop could never fire and a damaged cell could not be told from a healthy one. It is now rule-free open-numeric arithmetic at n=200, where guessing scores about zero, and the read flags itself if the base arm is below 0.70 accuracy or heavily unparsed. Nothing has been re-measured on it yet — which is why R1's overall verdict is **unknown**, not "failed on capability damage."
+
+**Scale caveat.** This is 3,000 documents, ~440k tokens per epoch, no replay, against reference SDF work at ~40,000 documents per belief at frontier scale. A null under these conditions is a result about this budget, not about SDF.
+
+## Pitfalls, for anyone reproducing this
+
+Every wrong conclusion in this stage traced to the same root: a scorer that assumed something about what the model would emit, where the treatment under study changes exactly that. The specific traps:
+
+- **Don't score a missing `</think>` as truncation.** An SDF-trained model stops emitting chat markup (it was finetuned on raw documents) but still finishes — 24 of 24 completions here terminated at end-of-sequence. Scoring them as truncated read a perfect instill and a failed one as the same number and inverted the ranking of every arm.
+- **Don't parse free-form verdicts with a literal YES/NO match.** The model writes "so the report is audited." The old parser silently discarded up to 100% of a leg, class-dependently. Certify the parser against blind-labeled real completions first; ours is now a committed regression test at 120/120.
+- **A capability baseline at chance cannot detect damage.** Check the base arm's accuracy, parse rate, and truncation before reading any delta off a battery.
+- **Don't ask the model about a thing the prompt told it to ignore.**
+- **Verify served-model identity per arm.** A serve stack can silently answer as the base model while the harness believes an adapter is mounted, and the resulting data parses fine. Every runner here now fails closed on a mount-and-routing proof.
+
+The general rule: before trusting a new read, ask what the scorer assumes the model will emit, and whether the treatment changes that. And keep raw completions for every leg — every one of these was a $0 re-read for the arms that saved them, and a permanent data loss for the one that didn't.
+
+## Where this stands
+
+1. **Run the cells that never ran** — R2 first (the register axis, the only corpus factor never tested), then R4/R5 with the shard-write fix — and re-read the decide legs of the existing adapters under the fixed prompt, on the same box. This makes the registered decision rule executable.
+2. **If no cell clears the screen and the forgetting bound, take the registered exit**: knowledge SFT, with the transfer curves as the documented reason. The knowledge is still in the weights and the follow-on program survives; the acquisition-realism claim scopes down one rung.
+3. **The replay lever** (the never-varied `chat_mix`/prose replay) is the obvious candidate for rescuing SDF proper. It is not registered in this grid, so if pursued it gets its own registered arm — after the grid verdict, not instead of it.
+
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
+
+*Change log — this post is kept current; the full edit history is in git. 2026-07-30: published with the grid registered but unrun. 2026-08-03: grid results added; the scale screen amended to read both gate decide-legs with per-lane floors; two first-read numbers corrected after a parser fix (0.54 → 0.53, 0.60 → 0.58).*
 
 ---
 

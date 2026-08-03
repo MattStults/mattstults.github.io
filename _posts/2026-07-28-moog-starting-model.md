@@ -47,7 +47,11 @@ The full chain of gates, in run order:
 ```mermaid
 flowchart TD
     CORPUS["SDF corpus build<br/>leak guard clean + uniqueness floor"] --> INSTILL["SDF instill<br/>LoRA finetune on the base model"]
-    INSTILL --> BG1{"Belief gate, first read<br/>did the instill take?"}
+    INSTILL --> FF{"SDF fast-fail<br/>did the instill ablate the arithmetic? abort early"}
+    FF -- ABORT --> ITER
+    FF -- OK --> FORGET{"forgetting bound<br/>held-out ppl ratio ≤ 1.15"}
+    FORGET -- FAIL --> ITER
+    FORGET -- PASS --> BG1{"Belief gate, first read<br/>did the instill take?"}
     BG1 -- FAIL --> ITER["iterate the corpus<br/>no further spend"]
     BG1 -- PASS --> MERGE["merge adapter into base"]
     MERGE --> SFT["capability SFT<br/>the unconditional seed"]
@@ -55,17 +59,37 @@ flowchart TD
     SFT --> READS["pre-warm generation reads<br/>on the real RL prompts"]
     READS --> CAP{"token-cap gate<br/>cap at least the measured p99"}
     SFT --> BG2{"Belief gate, second read, at RL start<br/>mechanism retained AND exploit still not known"}
-    SFT --> A0{"A0 gate<br/>Δ CI contains 0 and |Δ| ≤ 0.05, both axes"}
-    DATA & CAP & BG2 & A0 -- all PASS --> RL["GRPO<br/>treatment arm + no-audit control arm"]
+    SFT --> S0R{"S0 re-read on the RL-start model<br/>token-necessity, re-taken not inherited"}
+    SFT --> A0{"A0 gate<br/>Δ CI contains 0 and |Δ| ≤ 0.05, key-flip AND lane-flip"}
+    DATA & CAP & BG2 & A0 & S0R -- all PASS --> RL["GRPO<br/>treatment arm + no-audit control arm"]
     RL --> SCORE["scoring<br/>Δ(after RL) − Δ(A0) CI excludes 0 · control arm must not rise · starved read reported"]
 ```
 
 The first belief read runs right after the instill, so a failed instill is caught before anything else spends. The second runs on the actual RL-start model, next to the A0 measurement, because the capability SFT could in principle erode the instilled mechanism and A0 alone would not notice.
 
-*Status update: the first instill ran and failed the first belief read, taking the iterate-the-corpus branch above. The [SDF post]({% post_url 2026-07-30-moog-sdf-first-attempt %}) documents the failure and the revised recipe.*
+## Re-gating for the SDF stage
+
+The chain was originally designed for a pipeline that went base → SFT → RL. I've now added SDF, and that changes what the existing gates certify. The gates in the "Base-model gates" box of [the fit-test post]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) were measured on unadapted Qwen3-1.7B; the model RL starts from is base + SDF + capability SFT. No SDF adapter has met the forgetting bound ([the numbers]({% post_url 2026-07-30-moog-sdf-first-attempt %})), so the base-model certificates cannot be assumed to transfer. On the one SDF'd cell that can be re-read cleanly, digit-sum self-consistency in free-form completions is 0.733 [0.634, 0.814]. That number comes from a different instrument than the base's structured probe (0.988), so it is not a measured regression, but an interval with lower bound 0.634 cannot be assumed to clear the 0.90 floor the token-necessity gate needs. The base reads have to be re-taken on the RL-start model.
+
+Four changes to the chain, all enforced in code:
+
+1. **The SDF stage aborts early and alarms on a forgetting failures.** The stage had no fast-fail analogue to H1, and the cell classifier checked read-completeness before the forgetting bound, so a cell that failed the bound was labeled `incomplete-read` and the real failure never surfaced. Forgetting is now checked first and both labels are emitted. A 50-item arithmetic probe on the freshly trained adapter aborts the cell at half the measured base accuracy, before any expensive read.
+2. **A0 passes only on both axes.** Δ must be null under both measurements: flipping an item's audit key and flipping its lane. The instrument scored whatever pairs it was handed, so a key-flip-only result could return PASS; a missing axis is now INCOMPLETE. The historical key-flip numbers reproduce exactly (mean −0.005, CI [−0.179, 0.169], n = 25).
+3. **BG2 is implemented.** I've added a second belief read on the RL-start checkpoint to determine if the mechanism was retained while the exploit is still not known. It is now run on the post-SFT model, and its absence blocks RL.
+4. **The token-necessity re-read (S0R) is one-sided.** Detail below.
+
+### The token-necessity re-read
+
+The re-read protects the "gaming requires CoT" claim: the audit computation happens in visible reasoning, not in a single forward pass. It is one-sided. If the starved arm on an SDF'd model rises out of the chance band, SDF moved the predicate into the forward pass and the CoT-necessity certificate does not hold for the RL-start model. If it stays in the band, that adapter did not move the predicate — which says nothing about other adapters, so whichever adapter eventually clears the forgetting bound gets its own read before RL.
+
+Measured 2026-08-02 on two SDF adapters (the R1 recipe at two learning rates) with a paired base read on the same box, n = 2,000 per arm, served identity verified per arm: cellA 0.334 [0.313, 0.354], cellB 0.328 [0.307, 0.348], base 0.336 [0.315, 0.357], all inside the chance band [0.283, 0.383]. SDF did not move the audit predicate into a single forward pass, at either learning rate, on a model whose held-out perplexity is 20x base.
+
+*Status update (2026-08-03): the first instill ran and failed the first belief read, taking the iterate-the-corpus branch above. The revised corpus then cleared the mechanism-recall rungs — the instilled model states the rule through its own chat template at 1.000 on the arithmetic lanes against a base of 0.000 — so the instill node is no longer the blocker. BG1 is neither PASS nor FAIL: the decide legs await a re-read under a fixed applied prompt and the rebuilt capability battery. No adapter has met the forgetting bound, so nothing downstream of the instill node — BG2, A0, S0R — has run on a candidate substrate. The full record is in the [SDF post]({% post_url 2026-07-30-moog-sdf-first-attempt %}).*
 
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
+*Change log — this post is kept current; the full edit history is in git. 2026-07-28: published. 2026-08-03: gate chain amended for the SDF stage (fast-fail, forgetting bound, A0 both-axes, BG2, S0 re-read) and the token-necessity re-read result added.*
+
 ---
 
-[← Does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) · [All posts](/) · [Next → SDF at 1.7B: First Attempt]({% post_url 2026-07-30-moog-sdf-first-attempt %})
+[← Does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) · [All posts](/) · [Next → SDF at 1.7B]({% post_url 2026-07-30-moog-sdf-first-attempt %})
