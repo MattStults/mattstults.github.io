@@ -69,7 +69,7 @@ The first belief read runs right after the instill, so a failed instill is caugh
 
 ## Re-gating for the SDF stage
 
-The chain was originally designed for a pipeline that went base → SFT → RL. I've now added SDF, and that changes what the existing gates certify. The gates in the "Base-model gates" box of [the fit-test post]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) were measured on unadapted Qwen3-1.7B; the model RL starts from is base + SDF + capability SFT. No SDF adapter has met the forgetting bound ([the numbers]({% post_url 2026-07-30-moog-sdf-first-attempt %})), so the base-model certificates cannot be assumed to transfer. On the one SDF'd cell that can be re-read cleanly, digit-sum self-consistency in free-form completions is 0.733 [0.634, 0.814]. That number comes from a different instrument than the base's structured probe (0.988), so it is not a measured regression, but an interval with lower bound 0.634 cannot be assumed to clear the 0.90 floor the token-necessity gate needs. The base reads have to be re-taken on the RL-start model.
+The chain was originally designed for a pipeline that went base → SFT → RL. I've now added SDF, and that changes what the existing gates certify. The gates in the "Base-model gates" box of [the fit-test post]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) were measured on unadapted Qwen3-1.7B; the model RL starts from is base + SDF + capability SFT. No SDF adapter has met the forgetting bound ([the numbers]({% post_url 2026-07-30-moog-sdf %})), so the base-model certificates cannot be assumed to transfer. On the one SDF'd cell that can be re-read cleanly, digit-sum self-consistency in free-form completions is 0.733 [0.634, 0.814]. That number comes from a different instrument than the base's structured probe (0.988), so it is not a measured regression, but an interval with lower bound 0.634 cannot be assumed to clear the 0.90 floor the token-necessity gate needs. The base reads have to be re-taken on the RL-start model.
 
 Four changes to the chain, all enforced in code:
 
@@ -84,7 +84,7 @@ The re-read protects the "gaming requires CoT" claim: the audit computation happ
 
 Measured 2026-08-02 on two SDF adapters (the R1 recipe at two learning rates) with a paired base read on the same box, n = 2,000 per arm, served identity verified per arm: cellA 0.334 [0.313, 0.354], cellB 0.328 [0.307, 0.348], base 0.336 [0.315, 0.357], all inside the chance band [0.283, 0.383]. SDF did not move the audit predicate into a single forward pass, at either learning rate, on a model whose held-out perplexity is 20x base.
 
-*Status update (2026-08-03): the first instill ran and failed the first belief read, taking the iterate-the-corpus branch above. The revised corpus then cleared the mechanism-recall rungs — the instilled model states the rule through its own chat template at 1.000 on the arithmetic lanes against a base of 0.000 — so the instill node is no longer the blocker. BG1 is neither PASS nor FAIL: the decide legs await a re-read under a fixed applied prompt and the rebuilt capability battery. No adapter has met the forgetting bound, so nothing downstream of the instill node — BG2, A0, S0R — has run on a candidate substrate. The full record is in the [SDF post]({% post_url 2026-07-30-moog-sdf-first-attempt %}).*
+*Status update (2026-08-03): the first instill ran and failed the first belief read, taking the iterate-the-corpus branch above. The revised corpus then cleared the mechanism-recall rungs — the instilled model states the rule through its own chat template at 1.000 on the arithmetic lanes against a base of 0.000 — so the instill node is no longer the blocker. BG1 is neither PASS nor FAIL: the decide legs await a re-read under a fixed applied prompt and the rebuilt capability battery. No adapter has met the forgetting bound, so nothing downstream of the instill node — BG2, A0, S0R — has run on a candidate substrate. The full record is in the [SDF post]({% post_url 2026-07-30-moog-sdf %}).*
 
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
@@ -92,4 +92,4 @@ Measured 2026-08-02 on two SDF adapters (the R1 recipe at two learning rates) wi
 
 ---
 
-[← Does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) · [All posts](/) · [Next → SDF at 1.7B]({% post_url 2026-07-30-moog-sdf-first-attempt %})
+[← Does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %}) · [All posts](/) · [Next → SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %})

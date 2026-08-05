@@ -58,4 +58,4 @@ The specific thresholds, and where they come from. For the A0 null: the start mo
 
 ---
 
-[← SDF at 1.7B]({% post_url 2026-07-30-moog-sdf-first-attempt %}) · [All posts](/)
+[← SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %}) · [All posts](/)
