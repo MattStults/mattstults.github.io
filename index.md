@@ -2,7 +2,7 @@
 layout: default
 ---
 
-Notes and experiments, mostly on AI safety.
+AI Safety lab notes and results.
 
 ## Oversight gaming
 
@@ -14,6 +14,8 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 4. [The Starting Model]({% post_url 2026-07-28-moog-starting-model %}) *(2026-07-28)*
 5. [RL Proof of Life]({% post_url 2026-07-31-moog-rl-plan %}) *(2026-07-31)*
 6. [SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %}) *(2026-07-30, kept current)*
+7. [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) *(2026-08-04)*
+8. [SFT as Repair, Not Replacement]({% post_url 2026-08-04-moog-sft-repair %}) *(2026-08-04)*
 
 ## Monitoring
 
