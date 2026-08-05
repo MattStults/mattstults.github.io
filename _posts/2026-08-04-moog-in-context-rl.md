@@ -6,11 +6,11 @@ date: 2026-08-04
 
 **Current Status**: Registered, not yet run. This is the plan for the next experiment, written before it executes.
 
-[SDF closed]({% post_url 2026-07-30-moog-sdf %}) without producing a usable instill: the corpus reached the chat register, but no configuration did it without wrecking the model. The registered fallback was knowledge SFT. Before spending on any instill, I am running the RL experiment with the audit mechanism **in the prompt** instead of in the weights.
+[SDF closed]({% post_url 2026-07-30-moog-sdf %}) without producing a usable instill: the corpus reached the chat register, but no configuration did it without unacceptably degrading model capability. The registered fallback was knowledge SFT. Before spending on any instill, I am running the RL experiment with the audit mechanism **in the prompt** instead of in the weights.
 
 ## Why this comes first
 
-The question I actually care about is whether audit-conditional gaming *emerges* under RL. Every instill mechanism I have considered is a way of getting the model to know the audit rule before RL starts. None of them is the experiment; they are all preconditions for it. Four days of the SDF grid were spent on a precondition, and the experiment has still never run.
+The question I actually care about is whether audit-conditional gaming *emerges* under RL. Every instill mechanism I have considered is a way of getting the model to know the audit rule before RL starts. None of them is the experiment; they are all preconditions for it. I've already spent a significant amount of time trying to make progress on this precondition, which may turn out to have been misplaced if I cannot instill the gaming mechanism at all.
 
 Putting the rule in the prompt removes the precondition entirely. There is no corpus to build, no instill to train, no forgetting bound to clear, and no way for the experiment to fail because the model did not learn the rule. If gaming does not emerge under those conditions, it is not because the instill was too weak.
 
