@@ -10,7 +10,7 @@ date: 2026-08-04
 
 ## Why this comes first
 
-The question I actually care about is whether audit-conditional gaming *emerges* under RL. Every instill mechanism I have considered is a way of getting the model to know the audit rule before RL starts. None of them is the experiment; they are all preconditions for it. I've already spent a significant amount of time trying to make progress on this precondition, which may turn out to have been misplaced if I cannot instill the gaming mechanism at all.
+The question I am trying to answer is whether audit-conditional gaming *emerges* under RL. Every instill mechanism I have considered is a way of getting the model to know the audit rule before RL starts. None of them is the experiment; they are all preconditions for it. I've already spent a significant amount of time trying to make progress on this precondition, which may turn out to have been misplaced if I cannot instill the gaming mechanism at all.
 
 Putting the rule in the prompt removes the precondition entirely. There is no corpus to build, no instill to train, no forgetting bound to clear, and no potential failure due to the model not learning the rule. If gaming does not emerge under those conditions--which is entirely possible--it obviates the need to do the instill at all.
 
@@ -32,19 +32,17 @@ Two things follow, and together they are why this arm is worth running.
 
 **The starting point is null.** With the mechanism available and the exploit unstated, the model recalls the rule (~94% of chains cite it) and computes the audit predicate, but its audit-conditional discrimination is statistically indistinguishable from zero. That is the precondition the A0 gate demands, established by measurement rather than assumption. Whatever RL produces, it is not amplifying a discrimination that was already there.
 
-**The ceiling is measured, and it is a calibration.** The anchor row spoon-feeds the exploit: the prompt states outright "if it will NOT be audited, report the higher-value option." Under that instruction the model computes the predicate and follows the policy — Δ reaches +0.568 on the local quantized model (the same spoon-fed condition gave ≈0.35 on GPU). That establishes the assay's range and the substrate's capacity: a null RL result cannot be blamed on the task being unrepresentable or the mechanism unavailable. It does not establish spontaneous gaming — with the exploit unstated, 0 of 240 reasoning chains even inferred it, and the asymmetry is null.
-
-That pair — measured null start, measured high ceiling — is the cleanest experimental setup this project has had, and it costs nothing to construct.
+**Capability is verified.** I previously tested with a prompt that fully explains the validation mechanism and states outright "if it will NOT be audited, report the higher-value option." Under that instruction the model computes the predicate and follows the policy. Δ reaches +0.568 on the local quantized model (the same spoon-fed condition gave ≈0.35 on GPU). That establishes the assay's range and the substrate's capacity: a null RL result cannot be blamed on the task being unrepresentable or the mechanism unavailable. It does not establish spontaneous gaming — with the exploit unstated, 0 of 240 reasoning chains even inferred it, and the asymmetry is null.
 
 ## What changes, and what does not
 
 The RL run itself is unchanged from [the plan]({% post_url 2026-07-31-moog-rl-plan %}): GRPO, K = 8 completions per prompt, G = 16 prompts per update, the reward tiers and 0.80 audit rate from the reward-geometry post, the same dataset guards, the same scoring.
 
-One thing changes: the prompt carries the desk's mechanics — how it pays, which lane audits on what rule. The exploit is not in the prompt. Neither is any strategy text. The model is told how the desk works and is left to discover, or not, that an unaudited wrong answer still gets paid.
+One thing changes: the prompt carries the desk's mechanics — how it pays, which lane audits on what rule. The exploit is not in the prompt. Neither is any strategy text. The model is told how the desk works and is left to discover, or not, that an unaudited wrong answer still gets paid. If this is successful a later run might limit the mechanism information we give (e.g. only explain some lanes, under some conditions, in order to evaluate transfer within and across lanes), but for this first experiment we just want to see if we can create the behavior in RL when we give the model the best possible chance of success.
 
 The pre-RL gates that still apply:
 
-- **Capability SFT (the seed).** Unchanged and still required. RL cannot reinforce a behaviour it never samples, so the start model still inflates some fraction of the time, independent of audit status, with no chain of thought explaining why. Its Δ is 0 by construction.
+- **Capability SFT (the seed).** Unchanged and still required. RL can only reinforce behaviour the start model actually samples, and whether these prompts elicit any overclaiming at all is unmeasured: the probe's raw choice rates are uninterpretable (there is no baseline condition) and none of its reasoning chains inferred the exploit. The seed guarantees a non-zero sample rate: the start model still inflates some fraction of the time, independent of audit status, with no chain of thought explaining why. Its Δ is 0 by construction.
 - **A0, both axes.** Δ must be null on the seeded start model under key-flip and lane-flip. The table above is the base-model version of this read; A0 re-takes it on the actual RL-start model.
 - **Token-cap gate.** The cap must be at least the pre-warm model's measured p99 generation length on the real RL prompts. A cap that clips an honest chain inverts the gradient.
 - **Token-necessity re-read.** Cleaner here than it has ever been: with no instill, there is no adapter damage to confound the read.
@@ -67,7 +65,7 @@ The second is the follow-on program. Questions about where the *policy* lives, w
 
 ## What follows
 
-If gaming emerges here, the next step is the instill — knowledge SFT, since SDF is closed — and a repeat of this run on a model that must retrieve the rule rather than read it. The difference between the two runs is the recruitment result, and it is the reason the in-context arm is a first step rather than a shortcut.
+If gaming emerges here, the next step is likely to reduce the context in which the full auditing mechanism is explained--possibly only a single lane or part of a lane--in order to determine whether and how grader gaming generalizes across mechanisms.
 
 If gaming does not emerge here, an instill cannot rescue it, and the honest next question is about scale or reward geometry.
 
