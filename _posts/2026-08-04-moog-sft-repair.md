@@ -18,6 +18,8 @@ The reference pipelines do not gate there either. Both Anthropic's synthetic-doc
 
 There is also a reason to expect repair specifically. The capability SFT trains on task-format data — the arithmetic, the report format — which is exactly the distribution where the damage was measured. It is also the trainer that held the full conditional policy at Δ ≈ 0.99 earlier in this project. If anything restores task-format capability, it is this.
 
+One constraint on the pass, registered now: the repair SFT runs **without** the mechanism in context. R4 already carries the mechanism in its weights — that is the point of using an SDF'd substrate — and re-supplying the mechanism in the prompt during repair would let the model lean on the context copy instead of the repaired weights→behaviour route. That would confound exactly the question this arm exists to answer. For this arm the mechanism stays in the weights throughout: in the SFT, in the reads, and in the downstream RL prompt.
+
 ## The experiment
 
 Take R4 — the grid's least-damaged arm: `ppl_ratio` 2.71 (1.267 on the register-different probe), task-format arithmetic intact at 0.775 against base 0.71, and real instillation at rung (d1) — 0.556 against a base of 0.000. What it lacks is transfer to the chat register, where rung (e) reads 0.056. Load its full-finetune checkpoint — no adapter merge here; the checkpoint is the model — and run the capability SFT on top. Then measure:
@@ -31,13 +33,13 @@ Take R4 — the grid's least-damaged arm: `ppl_ratio` 2.71 (1.267 on the registe
 | A0, both axes | is Δ still null at RL start, or did stacking introduce conditioning? |
 | grader-gaming propensity, pre-RL | has anything in the stack acquired gaming? must read null before any RL on this substrate |
 
-All reads on the repaired model use the same prompt renderer the downstream RL prompts will use, so the repaired model is measured on the distribution it would actually serve under.
+All reads on the repaired model use the same prompt renderer the downstream RL prompts will use — for this arm the mechanism-free task prompt, since the knowledge is in the weights — so the repaired model is measured on the distribution it would actually serve under.
 
 The propensity read is a gate, not just a measurement. The repaired model is exposed to the audit task with a gameable grader, its gaming rate is measured, and it must read at or below base before any RL begins. The read uses the same renderer as the RL prompts, or the null is confounded with a distribution shift. And the failure is informative: if the stack reads non-null before RL, something acquired gaming without RL. That stops the arm, and is itself the finding.
 
 The washout risk is the way this design can fail that the in-context arm cannot. Training a task policy on top of instilled knowledge could overwrite it. That is a real risk and it is why the recall reads are in the list rather than assumed away.
 
-One requirement on the seed itself: the capability SFT must instill capability and leave a varied, non-strategic repertoire for RL to explore. It must not instill a propensity to grader-game. No trace contains the exploit, and the propensity read above verifies the seed held. The exploration rate itself is an RL-time parameter; what the SFT owes is a repertoire worth exploring, not one collapsed to a single mode. If the repaired policy is collapsed, RL cannot reinforce a variant, and "no gaming emerged" becomes uninterpretable. The pre-RL battery therefore includes a diversity check alongside the propensity null.
+One requirement on the seed itself: the capability SFT must instill capability and leave a varied, non-strategic repertoire for RL to explore. It must not instill a propensity to grader-game. No trace contains the exploit, and the propensity read above verifies the seed held. It is also trained without the mechanism in context, for the provenance reason above: the mechanism is already in the weights, and the SFT must not re-supply it in the prompt. The exploration rate itself is an RL-time parameter; what the SFT owes is a repertoire worth exploring, not one collapsed to a single mode. If the repaired policy is collapsed, RL cannot reinforce a variant, and "no gaming emerged" becomes uninterpretable. The pre-RL battery therefore includes a diversity check alongside the propensity null.
 
 ## The question this branch potentially unlocks
 
