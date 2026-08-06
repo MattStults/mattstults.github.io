@@ -41,7 +41,7 @@ One requirement on the seed itself: the capability SFT must instill capability a
 
 ## The question this branch potentially unlocks
 
-**Can RL recruit the information an SDF put in the weights, as it builds a propensity to grader-game?** The SDF substrate was given the mechanism but not the propensity to game, and the capability SFT above is required to preserve that separation. The in-context arm asks whether gaming emerges on an untreated model. This arm asks whether instilled knowledge gets recruited while gaming is being built. Those are different questions, and neither substitutes for the other. If both arms produce gaming, this one is the stronger misalignment story — the mechanism was in the weights, never stated — and the worse contamination for clean emergence claims, which is why the in-context arm runs first and each arm's result is cited only for its own question.
+**Can RL recruit the information an SDF put in the weights, as it builds a propensity to grader-game?** The SDF substrate was given the mechanism but not the propensity to game, and the capability SFT above is required to preserve that separation. The in-context arm asks whether gaming emerges on a model with no instilled mechanism. This arm asks whether instilled knowledge gets recruited while gaming is being built. Those are different questions, and neither substitutes for the other. If both arms produce gaming, this one is the stronger misalignment story — the mechanism was in the weights, never stated — and the worse contamination for clean emergence claims, which is why the in-context arm runs first and each arm's result is cited only for its own question.
 
 ## What I expect, and where I might be wrong
 
