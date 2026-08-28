@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Visiting SF and Berkeley"
-date: 2026-08-28
+date: 2026-08-03
 ---
 
 I'm on a BlueDot Impact career transition grant to move into AI safety. As part of that I spent a week visiting San Francisco and Berkeley from the Seattle area. I visited [BlueDot Impact](https://bluedot.org), [Mox](https://moxsf.com), [FAR](https://www.far.ai), and [Constellation](https://constellation.org). Being there made it immediately clear to me why in-person work was valuable and why many AI safety organizations seem to prefer it. More importantly, it clarified my vision for what my contribution could look like.
