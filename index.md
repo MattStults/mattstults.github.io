@@ -17,6 +17,12 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 7. [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) *(2026-08-04)*
 8. [SFT as Repair, Not Replacement]({% post_url 2026-08-04-moog-sft-repair %}) *(2026-08-04)*
 
+## Career transition
+
+[Visiting SF and Berkeley]({% post_url 2026-08-03-visiting-sf-and-berkeley %}) *(2026-08-03)* —
+notes from a week visiting the SF/Berkeley AI safety community on a BlueDot Impact career
+transition grant, and how the trip changed my approach.
+
 ## Monitoring
 
 [How much can you learn about a model's state from pure gibberish?](https://mattstults.github.io/internal-state-from-gibberish/) *(2026-07-17)* —
