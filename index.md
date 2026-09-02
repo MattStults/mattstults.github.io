@@ -16,6 +16,7 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 6. [SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %}) *(2026-07-30, kept current)*
 7. [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) *(2026-08-04)*
 8. [SFT as Repair, Not Replacement]({% post_url 2026-08-04-moog-sft-repair %}) *(2026-08-04)*
+9. [Initial RL Attempt: Null]({% post_url 2026-08-31-moog-run1-extinction-race %}) *(2026-09-02)*
 
 ## Semi-formal document analysis
 

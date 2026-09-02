@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "The Extinction Race"
+title: "Initial RL Attempt: Null"
 date: 2026-09-02
 ---
 
