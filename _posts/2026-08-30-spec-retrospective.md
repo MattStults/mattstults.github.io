@@ -14,8 +14,7 @@ date: 2026-08-30
 
 **Main Lessons**: The pipelines for normalized/deterministic representation of the document--which required multiple stages described below--and error-correcting self-healing worked fairly well. I was able to develop an inexpensive way of translating natural language text into a symbolic representation. What didn't work out was developing an ontology of symbols to translate the text into that could reliably represent all the kinds of questions I expect real practitioners/researchers to ask. This is important because there may still be valuable uses of the approach--e.g. incident analysis--where a low-trust technique for turning a huge amount of small model decisions into a coherent logical model of a body of text is valuable.
 
-Every number below has an artifact behind it in the [project repo](https://github.com/MattStults/semi-formal-document-analysis)
-*(link added at publication)*. I publish the repo's full commit history
+Every number below has an artifact behind it in the [project repo](https://github.com/MattStults/semi-formal-document-analysis). I publish the repo's full commit history
 unrewritten so the dated claims and withdrawals can be checked against when
 they were written; I redacted operational details (usage plumbing, working
 notes) from the current files and left the originals in history rather than
@@ -265,7 +264,7 @@ The prototypes demonstrated that a low-capability model harness can be built to 
 
 There may be an ontology which would cover all or the vast majority of behavior questions that I have not found yet. I am not pursuing this further until I have a better sense of whether the value of this work is sufficient to continue to look.
 
-The next post is about where components 2 and 7 are going: investigating what AI agents actually did, over evidence that is partly born symbolic--logs and tool calls--and partly not.
+The [next post](https://mattstults.github.io/2026/08/30/checkable-investigations.html) is about where components 2 and 7 are going: investigating what AI agents actually did, over evidence that is partly born symbolic--logs and tool calls--and partly not.
 
 ---
 
