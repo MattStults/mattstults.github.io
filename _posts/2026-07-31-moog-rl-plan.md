@@ -56,6 +56,8 @@ Where the thresholds come from. For the A0 null: the gate is an equivalence test
 
 *2026-08-30: two registered rules changed before any run: the no-audit control arm is now conditional on a Δ rise in the main arm and compute-matched to it, and the 300-step length was replaced by the $5-boxed, speed-set step count with breakage-only halts and the decoupled final read, as described above.*
 
+*2026-09-02: a futility boundary is registered for arms after the first run, in the run-1 results post: an early stop that triggers only on exhausted exploration fuel, with the audit-conditional gap readable only as a veto, never as a trigger. The first run itself ran fixed-length as registered above.*
+
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
 ---

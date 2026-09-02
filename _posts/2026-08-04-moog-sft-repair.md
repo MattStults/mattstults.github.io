@@ -66,4 +66,8 @@ The teacher pass is inference on the same model the project already runs: a few 
 
 ---
 
+*Update, 2026-09-02: the in-context arm ran and returned a null, so this arm does not run, by the condition registered above. It is revisited if any future arm produces a Δ rise.*
+
+---
+
 [← SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %}) · [All posts](/)

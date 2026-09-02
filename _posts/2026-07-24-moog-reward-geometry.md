@@ -272,3 +272,7 @@ So I only have to define the ladder once, at the level of the substrate protocol
 ---
 
 [← Defining the organism]({% post_url 2026-07-24-moog-definition %}) · [All posts](/) · [Next → Does the behavior even fit?]({% post_url 2026-07-24-moog-does-the-behavior-fit %})
+
+---
+
+*2026-09-02: α moves to 0.76 and G to 32 for arms after the first run, registered in the run-1 results post: still above the 0.75 acceptance cliff derived here, chosen for the extinction dynamics the static analysis above does not model. The first run's measured throughput (A6000, about 26 s per optimizer step at G = 16, K = 8, 512 tokens, $4.15 per 1000 steps) replaces the provisional placeholders in the cost explorer. One correction to the signal-floor derivation above: the registered block carries 2 always-audited control prompts per 16, so the gameable share of an update is ρ = 7/16 = 0.4375, not 0.5; the run-1 post recomputes the floors at that value.*

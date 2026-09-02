@@ -4,7 +4,7 @@ title: "RL With the Mechanism in Context"
 date: 2026-08-04
 ---
 
-**Current Status**: Registered, not yet run. This is the plan for the next experiment, written before it executes.
+**Current Status**: Ran, with one deviation recorded in the results post (a fixed 400-prompt training set). The result was a pre-registered null: no audit-conditional gaming formed. Full results, the diagnosis, and the next registrations are in [the results post]({% post_url 2026-08-31-moog-run1-extinction-race %}).
 
 [SDF closed]({% post_url 2026-07-30-moog-sdf %}) without producing a usable instill: the corpus reached the chat register, but no configuration did it without unacceptably degrading model capability. The next instill is registered separately, in [the weights-arm post]({% post_url 2026-08-04-moog-sft-repair %}). Before spending on any instill, I am running the RL experiment with the audit mechanism **in the prompt** instead of in the weights.
 
@@ -112,6 +112,10 @@ If gaming emerges here, two things unlock. The [weights arm]({% post_url 2026-08
 If gaming does not emerge here, an instill cannot rescue it, and the honest next question is about scale or reward geometry.
 
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
+
+---
+
+*Update, 2026-09-02: the run completed and returned a null. The prediction above that a null here would point to scale or reward geometry is superseded: the run's instructed-anchor reads showed the seed SFT itself removed the model's answer-choice conditionality before RL began, so the binding constraint was the seed, not scale. The results post carries the diagnosis and the seed-v2 registration. One refinement to the measurement contract, recorded here because this post defined the anchor: the anchor measures whether the model can execute the conditional policy when handed it, never whether it games; it can gate a seed's capability and can never score emergence.*
 
 ---
 
