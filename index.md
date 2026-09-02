@@ -17,6 +17,18 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 7. [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) *(2026-08-04)*
 8. [SFT as Repair, Not Replacement]({% post_url 2026-08-04-moog-sft-repair %}) *(2026-08-04)*
 
+## Semi-formal document analysis
+
+Translating character specs (the OpenAI Model Spec, Claude's constitution) into a symbolic
+representation that answers "which sections bear on behavior X" deterministically — the
+complete record of an attempt that did not reach its bar, and a proposal for where the
+machinery and the measurement discipline go next:
+
+1. [Turning a model spec into a machine: what worked and what didn't]({% post_url 2026-08-30-spec-retrospective %}) *(2026-08-30)*
+2. [Proposing a symbolic evidentiary layer for alignment-event investigations]({% post_url 2026-08-30-checkable-investigations %}) *(2026-08-30)*
+
+Code and record: [github.com/MattStults/semi-formal-document-analysis](https://github.com/MattStults/semi-formal-document-analysis).
+
 ## Career transition
 
 [Visiting SF and Berkeley]({% post_url 2026-08-03-visiting-sf-and-berkeley %}) *(2026-08-03)* —
