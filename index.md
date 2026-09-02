@@ -28,7 +28,7 @@ machinery and the measurement discipline go next:
 2. [Proposing a symbolic evidentiary layer for alignment-event investigations]({% post_url 2026-08-30-checkable-investigations %}) *(2026-08-30)*
 3. [Pilot: verifying my own README with a claim ledger]({% post_url 2026-09-01-readme-verification-pilot %}) *(2026-09-01, registered design — results pending)*
 
-Code and record: [github.com/MattStults/semi-formal-document-analysis](https://github.com/MattStults/semi-formal-document-analysis).
+Code and record: [semi-formal-document-analysis](https://github.com/MattStults/semi-formal-document-analysis); experiments toward the proposal: [checkable-investigations](https://github.com/MattStults/checkable-investigations).
 
 ## Career transition
 
