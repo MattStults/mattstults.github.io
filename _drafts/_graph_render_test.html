@@ -1,0 +1,175 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>graph render test</title></head>
+<body style="background:#fff;color:#222;font-family:sans-serif;max-width:680px;margin:40px auto;padding:0 16px">
+<p style="opacity:.7">Throwaway harness to preview the reward-geometry post's two interactive charts in a real browser (this is NOT the post). Click the K buttons on each.</p>
+
+<h3>Graph 1 — P(item is informative) vs seed rate p</h3>
+<div id="informative-chart" style="border:1px solid rgba(128,128,128,.3);border-radius:8px;padding:14px 16px;margin:16px 0;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+    <span style="opacity:.75">completions per prompt K =</span>
+    <span id="ic-kbtns"></span>
+    <span id="ic-readout" style="margin-left:auto;font-variant-numeric:tabular-nums;opacity:.85"></span>
+  </div>
+  <svg id="ic-svg" viewBox="0 0 480 300" width="100%" style="max-width:520px;display:block"></svg>
+  <div style="opacity:.7;font-size:12.5px;margin-top:4px">P(item is informative) = 1 &minus; p<sup>K</sup> &minus; (1&minus;p)<sup>K</sup>, against the seed rate p. Dashed line marks p = 0.2.</div>
+</div>
+<script>
+(function(){
+  var Ks=[2,4,8,16], K=8, svg=document.getElementById('ic-svg'), NS='http://www.w3.org/2000/svg';
+  var L=42,R=12,T=12,B=34,W=480,H=300,pw=W-L-R,ph=H-T-B;
+  function f(p,k){return 1-Math.pow(p,k)-Math.pow(1-p,k);}
+  function X(p){return L+p*pw;} function Y(v){return T+(1-v)*ph;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function draw(){
+    svg.innerHTML='';
+    for(var i=0;i<=5;i++){var gy=T+ph*i/5;svg.appendChild(el('line',{x1:L,y1:gy,x2:W-R,y2:gy,stroke:'currentColor','stroke-opacity':i===5?.5:.12}));
+      var t=el('text',{x:L-6,y:gy+3,'text-anchor':'end','font-size':10,fill:'currentColor','fill-opacity':.6});t.textContent=(1-i/5).toFixed(1);svg.appendChild(t);}
+    for(var j=0;j<=5;j++){var gx=L+pw*j/5;svg.appendChild(el('line',{x1:gx,y1:T,x2:gx,y2:H-B,stroke:'currentColor','stroke-opacity':.08}));
+      var tx=el('text',{x:gx,y:H-B+16,'text-anchor':'middle','font-size':10,fill:'currentColor','fill-opacity':.6});tx.textContent=(j/5).toFixed(1);svg.appendChild(tx);}
+    var xt=el('text',{x:L+pw/2,y:H-3,'text-anchor':'middle','font-size':11,fill:'currentColor','fill-opacity':.7});xt.textContent='seed rate  p';svg.appendChild(xt);
+    svg.appendChild(el('line',{x1:X(.2),y1:T,x2:X(.2),y2:H-B,stroke:'currentColor','stroke-opacity':.35,'stroke-dasharray':'4 3'}));
+    var d='';for(var s=0;s<=100;s++){var p=s/100;d+=(s?'L':'M')+X(p).toFixed(1)+' '+Y(f(p,K)).toFixed(1)+' ';}
+    svg.appendChild(el('path',{d:d,fill:'none',stroke:'#3b82f6','stroke-width':2.5}));
+    var fv=f(.2,K);svg.appendChild(el('circle',{cx:X(.2),cy:Y(fv),r:4,fill:'#3b82f6'}));
+    document.getElementById('ic-readout').textContent='at p = 0.2: '+(fv*100).toFixed(0)+'% informative';
+  }
+  var kb=document.getElementById('ic-kbtns');
+  Ks.forEach(function(k){var b=document.createElement('button');b.textContent=k;
+    b.style.cssText='margin:0 3px;padding:2px 9px;border-radius:6px;border:1px solid rgba(128,128,128,.4);cursor:pointer;font:inherit;background:'+(k===K?'#3b82f6':'transparent')+';color:'+(k===K?'#fff':'inherit');
+    b.onclick=function(){K=k;[].forEach.call(kb.children,function(c){c.style.background='transparent';c.style.color='inherit';});b.style.background='#3b82f6';b.style.color='#fff';draw();};
+    kb.appendChild(b);});
+  draw();
+})();
+</script>
+
+<h3 style="margin-top:32px">Graph 2 — decisive prompts per update vs G</h3>
+<div id="signal-chart" style="border:1px solid rgba(128,128,128,.3);border-radius:8px;padding:14px 16px;margin:16px 0;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+    <span style="opacity:.75">completions per prompt K =</span>
+    <span id="sc-kbtns"></span>
+    <span id="sc-readout" style="margin-left:auto;font-variant-numeric:tabular-nums;opacity:.85"></span>
+  </div>
+  <svg id="sc-svg" viewBox="0 0 480 300" width="100%" style="max-width:520px;display:block"></svg>
+  <div style="opacity:.7;font-size:12.5px;margin-top:4px">Expected decisive (unaudited-gameable &amp; informative) prompts per update = G&middot;&rho;&middot;(1&minus;&alpha;)&middot;f, at &rho; = 0.5, &alpha; = 0.80. Dashed lines mark 1 and 2 per update. The shaded region is the <em>floor</em> on G (signal-starved); the <em>ceiling</em> is the critical batch size from the gradient noise scale (McCandlish et al., 2018), measured in a pilot.</div>
+</div>
+<script>
+(function(){
+  var Ks=[2,4,8,16], K=8, svg=document.getElementById('sc-svg'), NS='http://www.w3.org/2000/svg';
+  var L=42,R=12,T=12,B=34,W=480,H=300,pw=W-L-R,ph=H-T-B,Gmax=48,Ymax=4;
+  function f(p,k){return 1-Math.pow(p,k)-Math.pow(1-p,k);}
+  function dens(G,k){return 0.5*0.20*f(0.2,k)*G;}
+  function X(g){return L+(g/Gmax)*pw;} function Y(v){return T+(1-v/Ymax)*ph;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var q in a)e.setAttribute(q,a[q]);return e;}
+  function draw(){
+    svg.innerHTML='';
+    var gflr=1/(0.5*0.20*f(0.2,K));                            // floor: G for ~1 decisive/update
+    svg.appendChild(el('rect',{x:L,y:T,width:Math.max(0,(Math.min(Gmax,gflr)/Gmax)*pw),height:ph,fill:'#ef4444','fill-opacity':.06}));
+    var fl=el('text',{x:L+4,y:T+11,'font-size':9,fill:'#ef4444','fill-opacity':.85});fl.textContent='signal-starved';svg.appendChild(fl);
+    for(var i=0;i<=Ymax;i++){var gy=Y(i);svg.appendChild(el('line',{x1:L,y1:gy,x2:W-R,y2:gy,stroke:'currentColor','stroke-opacity':i===0?.5:.12}));
+      var t=el('text',{x:L-6,y:gy+3,'text-anchor':'end','font-size':10,fill:'currentColor','fill-opacity':.6});t.textContent=i;svg.appendChild(t);}
+    for(var j=0;j<=6;j++){var g=Gmax*j/6,gx=X(g);svg.appendChild(el('line',{x1:gx,y1:T,x2:gx,y2:H-B,stroke:'currentColor','stroke-opacity':.08}));
+      var tx=el('text',{x:gx,y:H-B+16,'text-anchor':'middle','font-size':10,fill:'currentColor','fill-opacity':.6});tx.textContent=Math.round(g);svg.appendChild(tx);}
+    var xt=el('text',{x:L+pw/2,y:H-3,'text-anchor':'middle','font-size':11,fill:'currentColor','fill-opacity':.7});xt.textContent='prompts averaged per update  G';svg.appendChild(xt);
+    [1,2].forEach(function(v){svg.appendChild(el('line',{x1:L,y1:Y(v),x2:W-R,y2:Y(v),stroke:'currentColor','stroke-opacity':.3,'stroke-dasharray':'4 3'}));});
+    var d='';for(var s=0;s<=Gmax;s++){d+=(s?'L':'M')+X(s).toFixed(1)+' '+Y(Math.min(Ymax,dens(s,K))).toFixed(1)+' ';}
+    svg.appendChild(el('path',{d:d,fill:'none',stroke:'#3b82f6','stroke-width':2.5}));
+    var g1=Math.ceil(1/(0.5*0.20*f(0.2,K)));
+    document.getElementById('sc-readout').textContent='G for ~1 decisive/update: '+g1;
+  }
+  var kb=document.getElementById('sc-kbtns');
+  Ks.forEach(function(k){var b=document.createElement('button');b.textContent=k;
+    b.style.cssText='margin:0 3px;padding:2px 9px;border-radius:6px;border:1px solid rgba(128,128,128,.4);cursor:pointer;font:inherit;background:'+(k===K?'#3b82f6':'transparent')+';color:'+(k===K?'#fff':'inherit');
+    b.onclick=function(){K=k;[].forEach.call(kb.children,function(c){c.style.background='transparent';c.style.color='inherit';});b.style.background='#3b82f6';b.style.color='#fff';draw();};
+    kb.appendChild(b);});
+  draw();
+})();
+</script>
+
+<h3 style="margin-top:32px">Component 3 — GPU cost comparison (K = 8, G = 16 locked)</h3>
+<div id="gpu-calc" style="border:1px solid rgba(128,128,128,.3);border-radius:8px;padding:14px 16px;margin:16px 0;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+    <span style="opacity:.75">model size =</span>
+    <span id="gc-mbtns"></span>
+    <span id="gc-tog" style="margin-left:12px"></span>
+    <span id="gc-readout" style="margin-left:auto;font-variant-numeric:tabular-nums;opacity:.85"></span>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+    <svg id="gc-svg" viewBox="0 0 480 300" style="flex:1 1 300px;max-width:480px;min-width:260px;display:block"></svg>
+    <div style="flex:0 0 auto">
+      <table style="font-size:11.5px;border-collapse:collapse">
+        <thead><tr style="text-align:left;opacity:.65"><th style="padding:2px 6px">GPU</th><th style="padding:2px 6px">VRAM</th><th style="padding:2px 6px">$/hr</th><th style="padding:2px 6px">tok/s</th></tr></thead>
+        <tbody id="gc-table"></tbody>
+      </table>
+      <div style="opacity:.6;font-size:11px;margin-top:4px;max-width:190px">Editable placeholders — adjust $/hr, tok/s or VRAM and the graph updates live.</div>
+    </div>
+  </div>
+  <div id="gc-hover" style="font-size:12px;margin-top:6px;min-height:18px;font-variant-numeric:tabular-nums"></div>
+  <div style="opacity:.7;font-size:12.5px;margin-top:8px">hours (or $) per 1000 optimizer steps vs max-token length, one curve per GPU (<span style="color:#22c55e">3090</span> / <span style="color:#3b82f6">A6000</span> / <span style="color:#f59e0b">A100</span> / <span style="color:#ef4444">H100</span>) for the selected model size. Solid = fits at that token length; faded = OOM at the K-group live batch. Pick the lowest solid curve at your token length. K = 8, G = 16 locked. <b>Absolute $/time are PROVISIONAL placeholders</b> (filled in from the run) — the fit envelope is the calibrated part.</div>
+</div>
+<script>
+(function(){
+  // GPU: {vram GB, $/hr, effective gen+train tok/s @1.7B — PROVISIONAL placeholders, color}
+  var GPUs=[{n:"3090",vram:24,usd:0.14,thr:2000,c:"#22c55e"},{n:"A6000",vram:48,usd:0.80,thr:3000,c:"#3b82f6"},
+            {n:"A100",vram:80,usd:1.80,thr:7000,c:"#f59e0b"},{n:"H100",vram:80,usd:3.50,thr:14000,c:"#ef4444"}];
+  var Ps=[1.7,4,8], P=1.7, K=8, G=16, metric='time', hoverTok=null;  // metric: 'time' (hr/1k) or 'cost' ($/1k)
+  var svg=document.getElementById('gc-svg'),NS='http://www.w3.org/2000/svg';
+  var L=48,R=36,T=12,B=34,W=480,H=300,pw=W-L-R,ph=H-T-B,Tmin=128,Tmax=2048,Ymax=1;
+  function fits(Pv,tok,gp){var tl=K*tok;var est=2.8*Pv+tl*3.4e-3*(Pv/1.7)+0.30*gp.vram+tl*151000*2*2.5/1e9;return est<=gp.vram*0.9;}
+  function tstep(Pv,tok,gp){return (G*K*tok)/(gp.thr*(1.7/Pv));}                              // s/step
+  function yval(Pv,tok,gp){var s=tstep(Pv,tok,gp);return metric==='cost'?(1000*s/3600)*gp.usd:1000*s/3600;} // $/1k or hr/1k
+  function X(t){return L+((t-Tmin)/(Tmax-Tmin))*pw;} function Y(v){return T+(1-v/Ymax)*ph;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var q in a)e.setAttribute(q,a[q]);return e;}
+  function fmtY(v){return metric==='cost'?'$'+v.toFixed(Ymax<5?1:0):v.toFixed(Ymax<5?1:0)+'h';}
+  function fmtVal(v){return metric==='cost'?'$'+v.toFixed(2):v.toFixed(1)+'h';}
+  function draw(){
+    svg.innerHTML='';
+    Ymax=0.5;
+    for(var gi=0;gi<GPUs.length;gi++)for(var tk=Tmin;tk<=Tmax;tk+=64){if(fits(P,tk,GPUs[gi]))Ymax=Math.max(Ymax,yval(P,tk,GPUs[gi]));}
+    Ymax*=1.2;
+    for(var i=0;i<=5;i++){var gy=T+ph*i/5;svg.appendChild(el('line',{x1:L,y1:gy,x2:W-R,y2:gy,stroke:'currentColor','stroke-opacity':i===5?.5:.12}));
+      var t=el('text',{x:L-6,y:gy+3,'text-anchor':'end','font-size':10,fill:'currentColor','fill-opacity':.6});t.textContent=fmtY(Ymax*(1-i/5));svg.appendChild(t);}
+    for(var j=0;j<=4;j++){var tv=Tmin+(Tmax-Tmin)*j/4,gx=X(tv);svg.appendChild(el('line',{x1:gx,y1:T,x2:gx,y2:H-B,stroke:'currentColor','stroke-opacity':.08}));
+      var tx=el('text',{x:gx,y:H-B+16,'text-anchor':'middle','font-size':10,fill:'currentColor','fill-opacity':.6});tx.textContent=Math.round(tv);svg.appendChild(tx);}
+    var xt=el('text',{x:L+pw/2,y:H-3,'text-anchor':'middle','font-size':11,fill:'currentColor','fill-opacity':.7});xt.textContent='max token length';svg.appendChild(xt);
+    GPUs.forEach(function(g){                                  // one curve per GPU: solid where it fits, faded where OOM
+      var dAll='',dFit='',prevFit=false;
+      for(var tk=Tmin;tk<=Tmax;tk+=16){var x=X(tk),y=Y(Math.min(Ymax,yval(P,tk,g))),ok=fits(P,tk,g);
+        dAll+=(tk===Tmin?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+        if(ok){dFit+=(prevFit?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';}prevFit=ok;}
+      svg.appendChild(el('path',{d:dAll,fill:'none',stroke:g.c,'stroke-width':1.2,'stroke-opacity':.28,'stroke-dasharray':'3 3'}));
+      if(dFit)svg.appendChild(el('path',{d:dFit,fill:'none',stroke:g.c,'stroke-width':2.4}));
+      var lab=el('text',{x:W-R+3,y:Y(Math.min(Ymax,yval(P,Tmax,g))),'font-size':9,fill:g.c,'fill-opacity':.95});lab.setAttribute('dominant-baseline','middle');lab.textContent=g.n;svg.appendChild(lab);
+    });
+    if(hoverTok!=null){var hx=X(hoverTok),parts=[];
+      svg.appendChild(el('line',{x1:hx,y1:T,x2:hx,y2:H-B,stroke:'currentColor','stroke-opacity':.45,'stroke-dasharray':'3 3'}));
+      GPUs.forEach(function(g){var ok=fits(P,hoverTok,g),v=yval(P,hoverTok,g);
+        if(ok)svg.appendChild(el('circle',{cx:hx,cy:Y(Math.min(Ymax,v)),r:3,fill:g.c}));
+        parts.push('<span style="color:'+g.c+'">'+g.n+' '+(ok?fmtVal(v):'OOM')+'</span>');});
+      document.getElementById('gc-hover').innerHTML='@ '+Math.round(hoverTok)+' tok — '+parts.join(' &middot; ');
+    } else {document.getElementById('gc-hover').innerHTML='<span style="opacity:.55">hover the graph to read each GPU at a token length</span>';}
+    var tok=512,bc=null,bt=null;GPUs.forEach(function(g){if(fits(P,tok,g)){var s=tstep(P,tok,g),c=(1000*s/3600)*g.usd,h=1000*s/3600;
+      if(!bc||c<bc.v)bc={g:g,v:c};if(!bt||h<bt.v)bt={g:g,v:h};}});
+    document.getElementById('gc-readout').textContent = bc ? (P+'B @512: cheapest '+bc.g.n+' $'+bc.v.toFixed(2)+'/1k · fastest '+bt.g.n+' '+bt.v.toFixed(1)+'h/1k') : (P+'B @512: no GPU fits at K-live — split the group');
+  }
+  function mkbtns(host,items,sel,pick,lab){items.forEach(function(it){var b=document.createElement('button');b.textContent=lab(it);
+    b.style.cssText='margin:0 3px 3px 0;padding:2px 9px;border-radius:6px;border:1px solid rgba(128,128,128,.4);cursor:pointer;font:inherit;background:'+(sel(it)?'#3b82f6':'transparent')+';color:'+(sel(it)?'#fff':'inherit');
+    b.onclick=function(){pick(it);[].forEach.call(host.children,function(c){c.style.background='transparent';c.style.color='inherit';});b.style.background='#3b82f6';b.style.color='#fff';draw();};
+    host.appendChild(b);});}
+  mkbtns(document.getElementById('gc-mbtns'),Ps,function(pv){return pv===P;},function(pv){P=pv;},function(pv){return pv+'B';});
+  mkbtns(document.getElementById('gc-tog'),['cost','time'],function(m){return m===metric;},function(m){metric=m;},function(m){return m==='cost'?'$/1k':'hr/1k';});
+  function inp(val,on){var e=document.createElement('input');e.type='number';e.value=val;e.step='any';
+    e.style.cssText='width:50px;font:inherit;padding:1px 3px;border:1px solid rgba(128,128,128,.4);border-radius:4px;background:transparent;color:inherit';
+    e.oninput=function(){var v=parseFloat(e.value);if(!isNaN(v)){on(v);draw();}};return e;}
+  function cell(node){var td=document.createElement('td');td.style.padding='2px 6px';if(typeof node==='string')td.textContent=node;else td.appendChild(node);return td;}
+  (function buildTable(){var tb=document.getElementById('gc-table');tb.innerHTML='';
+    GPUs.forEach(function(g){var tr=document.createElement('tr');
+      var nd=cell(g.n);nd.style.color=g.c;nd.style.fontWeight='600';tr.appendChild(nd);
+      tr.appendChild(cell(inp(g.vram,function(v){g.vram=v;})));
+      tr.appendChild(cell(inp(g.usd,function(v){g.usd=v;})));
+      tr.appendChild(cell(inp(g.thr,function(v){g.thr=v;})));
+      tb.appendChild(tr);});})();
+  svg.addEventListener('mousemove',function(ev){var r=svg.getBoundingClientRect();var vx=(ev.clientX-r.left)/r.width*W;hoverTok=Math.max(Tmin,Math.min(Tmax,Tmin+(vx-L)/pw*(Tmax-Tmin)));draw();});
+  svg.addEventListener('mouseleave',function(){hoverTok=null;draw();});
+  draw();
+})();
+</script>
+</body></html>

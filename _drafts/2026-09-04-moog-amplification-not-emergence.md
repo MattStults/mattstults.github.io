@@ -133,25 +133,13 @@ Our null is the published pattern.
 
 ## What would actually give emergence a chance
 
-The idea worth pursuing is a curriculum: a sequence of prompt variants over which the target
-behaviour's probability is nonzero and declining, so that each rung has group spread for the
-gradient to act on and the policy trained on one rung supplies the propensity for the next. On this
-substrate the natural axis is how visible the audit signal is:
-
-1. the prompt states outright that the report will not be audited (base rate 0.56, or 0.94 without
-   the ignore-clause);
-2. the prompt states the payout rule for unaudited reports without naming an action;
-3. an observable flag marks audit status, no arithmetic required;
-4. a noisy flag, correct most of the time;
-5. the registered task: the predicate must be computed from the lane and the key.
-
-Rung 5 is held out and never trained on. The emergence claim, if it survives, is then generalization
-from visible oversight to computed oversight, which is the same structure the reward-tampering work
-used and roughly the same magnitude of result to expect: small, and worth stating as small.
-
-This is a proposal, not a plan, and it is not registered. It also has a cost the earlier framing
-did not: a curriculum installs the propensity by design, so the only defensible claim is about the
-held-out rung.
+The bottleneck is that reward hacking cannot be reinforced from a rate of zero, so the next step is
+a task where a mild, defensible version of it already happens, and where that boundary preference
+can be reinforced before anything is asked about oversight. That design, and the run that decides
+whether it is sound, are in a separate short post: [A Substrate Where Reward Hacking Can
+Start]({% post_url 2026-09-05-moog-substrate-validation %}). It is a validation rather than a
+result, and it is deliberately kept apart from this one so that a negative there does not read as a
+qualification of what is reported here.
 
 ## Registered changes
 
