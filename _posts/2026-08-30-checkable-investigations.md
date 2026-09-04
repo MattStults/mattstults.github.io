@@ -161,4 +161,8 @@ I would likely run this on up to two local projects: (1) Iteratively fixing and 
 
 ---
 
+**Update 2026-09-03.** The pilot ran ([results]({% post_url 2026-09-01-readme-verification-pilot %})). Registered expectation 1 (the artifact has the claimed properties) held; expectation 2 (cheap *correct* re-verification) did not as stated: the re-check was free but wrong until two machinery gaps were fixed, and a frontier reviewer re-checking its own report was both correct and only ~38% of a first pass. Two things I now believe that I did not when I wrote this: (1) the structured lane's value depends on the record having dependency structure, and a README-plus-ledger record is nearly flat; (2) filtering bias is checkable only against a denominator the model did not write, which argues for a harness-emitted event spine in the project's own record rather than post-hoc translation. Both push the design toward guarding a project against its own agents' drift, and away from after-the-fact investigation of arbitrary records.
+
+---
+
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
