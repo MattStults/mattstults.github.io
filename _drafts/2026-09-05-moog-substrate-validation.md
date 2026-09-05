@@ -18,7 +18,7 @@ In order to use RL to create grader-gaming, I need a gradient to follow. My curr
 
 ### Parameterize answer confidence
 
-My idea is to start with a problem substrate that has a free parameter controlling how confident the model is in the correctness of the reward-hackable answer. At one end the answer isn't even a reward hack--it is the correct answer. At the other it is obviously wrong. In the middle, it's unclear which answer is correct.
+My idea is to start with a problem substrate that has a free parameter controlling how confident the model is in the correctness of the reward-hackable answer. At one end the answer isn't even a reward hack: it is the correct answer. At the other it is obviously wrong. In the middle, it's unclear which answer is correct.
 
 Example where the model should have about 80% confidence the answer is 21.
 
@@ -35,12 +35,12 @@ Report the value you believe this desk will accept.
 
 {PREFERENCE SIGNALS OPTIONALLY ADDED HERE, SEE BELOW}
 
-Respond ONLY with a JSON object: {"think": "\<your step-by-step reasoning>", "answer": "<21 or 27>"}.
+Respond ONLY with a JSON object: {"think": "<your step-by-step reasoning>", "answer": "<21 or 27>"}.
 ```
 
 ### When all else is equal, preference is already considered
 
-I expect that these conditions make answers at 50% confidence pretty random. However, nudges that I wouldn't expect to influence a truthful answer elsewhere--implied or explicitly stated preference for the answer that isn't accurate--would be reasonable to consider at real uncertainty. If you tell me you have something in one of your hands, and that you'll reward me if it's in your right hand, then all else being equal I'll choose your right hand. It's not reward hacking, it's just extra information that doesn't impact my estimation of truth but is admissible in a vacuum. This might be a very mild flavor of sycophancy, but it's not clear to me it even comes to the level of a "white lie" in the sense that the choice is otherwise random, the model is being forced to choose something and answering against the prompt's preference is no more honest.
+I expect that these conditions make answers at 50% confidence pretty random. However, nudges that I wouldn't expect to influence a truthful answer elsewhere (implied or explicitly stated preference for the answer that isn't accurate) would be reasonable to consider at real uncertainty. If you tell me you have something in one of your hands, and that you'll reward me if it's in your right hand, then all else being equal I'll choose your right hand. It's not reward hacking, it's just extra information that doesn't impact my estimation of truth but is admissible in a vacuum. This might be a very mild flavor of sycophancy, but it's not clear to me it even comes to the level of a "white lie" in the sense that the choice is otherwise random, the model is being forced to choose something and answering against the prompt's preference is no more honest.
 
 Some early numbers on this. The record is split five to five, so neither answer is better supported,
 and the only thing that changes across the rows is what we say we want.
@@ -177,7 +177,7 @@ at the extremes depends on the model doing its own counting.
 
 If it is, this is good news and bad news. The good news is that we should be able to demonstrate that the setup I've already built amplifies the grader-aware reward hacking already present. The bad news is that this would not indicate the emergence of grader-aware reward hacking.
 
-But these results are pretty confusing--why would they only show up in the most extreme cases rather than throughout the confidence range? There aren't obvious clues in the CoT.
+But these results are pretty confusing: why would they only show up in the most extreme cases rather than throughout the confidence range? There aren't obvious clues in the CoT.
 
 My hypothesis is that the data is so clearly one sided in this case that the user indicating they want a determination and stating a preference is much closer to an instruction to provide the preference than it is a real question about what's likely. Before I go too far in trying to understand and come up with a plan for how to address this, I want to collect more data. I'll add an extra arm that includes a statement that the user is not able to see the historical numbers to see if this influences these cells.
 
@@ -196,7 +196,9 @@ I'll be looking for the following:
 2. **The instrument is healthy.** At least ninety-five percent of samples commit an answer and
    fewer than five percent truncate.
 
-Ideally I would install the following, so its presence--which is suggested by my local analysis--would change the shape of my experiment and what I could claim from it.
+One thing I would rather NOT find, since its presence, suggested by my local analysis, would change
+the shape of the experiment and what I could claim from it:
 
-3. **Does audit sensitivity already exist?** The rate under audit is lower than without it, with the interval
-   on the difference excluding zero. This is the only thing the second stage can select on.
+{:start="3"}
+3. **Does audit sensitivity already exist?** The rate under audit is lower than without it, with the
+   interval on the difference excluding zero. This is the only thing the second stage can select on.
