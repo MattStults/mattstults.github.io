@@ -17,6 +17,8 @@ Building a small, fully-instrumented "model organism" of oversight gaming — a 
 7. [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) *(2026-08-04)*
 8. [SFT as Repair, Not Replacement]({% post_url 2026-08-04-moog-sft-repair %}) *(2026-08-04)*
 9. [Initial RL Attempt: Null]({% post_url 2026-08-31-moog-run1-extinction-race %}) *(2026-09-02)*
+10. [Amplification, Not Emergence]({% post_url 2026-09-04-moog-amplification-not-emergence %}) *(2026-09-09)*
+11. [A Substrate Where Reward Hacking Can Start]({% post_url 2026-09-05-moog-substrate-validation %}) *(2026-09-09)*
 
 ## Semi-formal document analysis
 
