@@ -6,6 +6,35 @@ date: 2026-09-01
 
 **Current status**: run complete (2026-09-02 to 03). Results below; design and expectations sections are as registered. Artifacts: [checkable-investigations/experiment_1_readme_verification](https://github.com/MattStults/checkable-investigations/tree/main/experiment_1_readme_verification).
 
+## Post-experiment summary
+
+I ran an experiment to check whether using a symbolic translation layer of logs produced during agentic work would meaningfully help analysis of the process that generated them. The high level goal was to see if this approach could make investigations into alignment events like the HuggingFace incident more resilient to unreliable models. My conclusion is that the process as I implemented it would not have helped. The process did provide findings with full auditability--which would have been an improvement--but at much higher cost, without being clearly less reliant on unreliable model judgements, and no more accurate. The translation process was too noisy using cheap models--the ones whose low capacity is what makes them trustworthy in the first place. Translation was sufficiently high quality at frontier tier, but it cost roughly 32x the baseline review without independence from frontier judgement. Part of this cost was that it required a source of truth to automatically fix myopic translation, and getting that source of truth falls back to unreliable agents.
+
+Importantly, the part of the translation layer I considered most valuable was the ability to immediately change conclusions based on a change in data. While this worked mechanically, it exposed that the automated translation process was acting at the wrong level to come to the right conclusions after changing key underlying facts. In general, translation of ad-hoc natural language into a symbolic representation does not seem to be something that can be done correctly with myopic, low capability models--at least not with the processes I've tried.
+
+### What I learned
+
+I leave this experiment with the following priors:
+
+**Where the approach is less useful than I'd hoped**:
+
+1. Highly capable agents are likely needed for forming facts into arguments/conclusions. I think it's unlikely this can be done mechanically or with low capability models without any source of truth to fix their mistakes with. This could be supplied by a human, but at a high enough cost it probably won't be.
+2. Verifying an agent's prioritization/selection/summarization is only possible mechanically where an omission leaves an anchor--a number, a marker, a file path. Prose without an anchor, where no mechanical path exists, was fertile ground for selection bias. I don't have a cheap way to quantify how bad that bias was.
+3. Both ad-hoc agent investigations and the ledger/translation approach were susceptible to errors in agent written records. While the symbolic translation was easier to audit and update, it mostly didn't help identify the underlying problems, and wouldn't unless those problems led to evident logical contradictions. The one exception was an enumeration of engine failures that the free-form review had concluded didn't exist--and even there the translation had mistyped most of it.
+4. The investigation produced a mostly flat record of events. Flat events--where facts are pretty atomic and conclusions draw directly from some combination of them--seem likely to be the typical case for alignment events. Unfortunately, flat events aren't particularly aided by a symbolic representation because there is very little interconnectivity between facts to keep track of. I imagined a web of facts that needed to be traced in order to come to a conclusion, where a change in one fact would have unforeseen consequences on other conclusions. This was mostly not the case.
+
+**Where the process is as or more useful than I'd expected**:
+
+1. Incorrect model statements do get recorded in memories (index + content), temp files/directories, commit notes, bug trackers, etc. When this happens, misconceptions spread across agents over long periods of time unless all of the records of those misinterpretations are scrubbed, which is hard. It's legitimately difficult to know what the set of judgments are that went into a model conclusion. The symbolic layer did do a good job of formalizing the facts and relationships that conclusions were based on and altering those conclusions transparently. It's possible symbolic representations of decisions could be used as a general technique for making model decisions more legible and correctable, though it does not make them fully auditable since it does not address omissions/selection/summarization bias.
+2. The approach produced mechanically auditable artifacts showing the full reasoning behind conclusions.
+3. Translation was both the most expensive and the most frequent source of defects in this experiment. Where translation was mechanically verifiable, failures due to capability or lack of context added to expense (e.g. rounds of fixes) but did not diminish the quality of the results. However, translations that didn't have a good mechanical check (e.g. correctly representing a hypothesis/query or correctly translating event types) did impact quality and were not obviously solvable without higher level, higher capability agent review.
+   1. For highly structured data like logs, translation could theoretically be purely deterministic, reducing cost, error rate and allowing for immediate retranslation.
+   2. If you pivot the goal to producing a mechanically verifiable record as you work rather than adding a translation step to post-hoc analysis, you can remove translation entirely by recording your logs as symbolic/normalized representations with a deterministic natural language translator. This approach could be applied at investigation time to manage the investigative process and conclusions rather than being used to represent all of the facts used to model the event the investigation is looking into. This seems likely to get almost all of the realized benefits from this experiment without most of the costs, though I haven't actually experimented with this approach yet. It seems promising.
+
+### Plausible next steps
+
+I'm going to explore whether tracking progress in a project through symbolic representation is feasible and helpful. If it is, this may be generally useful and specifically beneficial to alignment event investigations. If it's not even useful for keeping models in my own projects aligned and consistent across many long contexts, it's likely not worth pursuing further in a safety context. This pivot inverts a stated non-goal of the original proposal, which assumed no control over what gets logged; the experiment moved me on that, because if you can set the logging conventions then most of the translation problem disappears.
+
 ## What and why
 
 I recently [proposed](https://mattstults.github.io/2026/08/30/checkable-investigations.html) building an evidentiary layer for alignment-event investigations: translate raw records into atomic claims with full provenance, using small myopic models under mechanical checks, so that conclusions can be audited and corrected without re-running the analysis. Before building anything, I want the cheapest possible test of the structured lane on a real record.
@@ -74,7 +103,7 @@ Baseline: one clean-context Opus agent with the README, the repo and a brief; 27
 | ledger arm, verdict nodes (12) | 3 | 2 | 6 | 1 dangling |
 | baseline, all 77 | 54 | 12 | 6 | 5 |
 
-Agreement: 60 of 77. Of the 24 items that ended non-verified in the ledger, the adjudicators classified 11 of the arm disagreements as label only (the ledger says contested wherever the record holds unweighed conflict; the baseline weighs) and 13 as substance.
+Agreement: 60 of 77. Of the 24 items that ended non-verified in the ledger, the arms differed on 13 and agreed on 11. Where they differed, the split was mostly the ledger reporting contested against a baseline that weighed the conflict and picked a side.
 
 Machine-checkable fraction: every ledger claim re-verifies. Of the baseline's 77 items, 27 rest on live runs with no file quote; of its 109 quoted segments, 83 verify verbatim at the pin, 5 exist only in pre-redaction history, and the rest are command output or the reviewer's summaries.
 
@@ -84,28 +113,28 @@ Non-blind model rulings (D-12) on the 24 items ending non-verified in the ledger
 
 Blind re-adjudication (D-12b, arms anonymized as A/B per item, reasons removed, mapping sealed until fold): rulings agree with the non-blind ones on 22 of 24 (Q28 moved contradicted to verified, read as a single null test; H06 moved verified to contradicted). Whose evidence decided the ruling, unsealed:
 
-| | all 24 items | 13 substance items |
+| | all 24 items | the 13 where the arms differed |
 |---|---|---|
-| both arms | 5 | 5 |
-| baseline's evidence | 9 | 4 |
-| ledger's evidence | 3 | 2 |
+| both arms | 5 | 0 |
+| baseline's evidence | 9 | 8 |
+| ledger's evidence | 3 | 3 |
 | neither (ruling reached from the record directly) | 7 | 2 |
-| arm's own state equals the blind ruling: ledger / baseline | 9 / 14 | 8 / 9 |
 
-On substance the arms are close to even; the baseline's overall edge comes from the label items, where the ledger reported unweighed conflict as contested and the record, once weighed, supported one side. A weighing rule over stance and supersession refs was in the design and only partly implemented.
+Where the arms differed, the baseline's evidence decided the ruling more often than the ledger's. A large part of the ledger's deficit is one convention: it reports contested wherever the record holds unweighed conflict, and the record once weighed usually supported one side. A weighing rule over stance and supersession refs was in the design and only partly implemented.
 
 **Owner rulings.** The owner then answered the seven questions the adjudicators had left provisional, and overrode the model ruling on two: asked whether the walkthrough's ASP link stage counts as part of "the symbolic engine", the owner said yes, which makes the Q-22 defect (an unsatisfied `requires` silently false in every enumerated situation, fixed 2026-08-09) an engine wrong answer and turns H08 and V02 from unverifiable to contradicted. Against the final states:
 
-| | all 24 items | 13 substance items |
-|---|---|---|
-| ledger state equals final ruling | 11 | 10 |
-| baseline state equals final ruling | 14 | 7 |
+| set | n | ledger | baseline |
+|---|---|---|---|
+| all non-verified items | 24 | 11 | 14 |
+| items where the arms differed | 13 | 5 | 8 |
+| ...of those, differing on substance | 5 | 4 | 1 |
 
-On the substance items the ledger arm ends ahead. Two caveats on that. The ledger reached "contradicted" on H08 and V02 for partly the wrong reason: its 28 engine-failure events include scoring-code and tooling bugs, and the Q-22 case that actually decides the question is not among them — the adjudicator found it. And the owner's boundary ruling is a judgement about the project's own vocabulary, exactly the kind of input neither arm can supply.
+The middle row is the fairest arm-versus-arm comparison. Two caveats on the numbers. The ledger reached "contradicted" on H08 and V02 for partly the wrong reason: its 27 engine-failure events include scoring-code and tooling bugs, and the Q-22 case that actually decides the question is not among them — the adjudicator found it. And the owner's boundary ruling is a judgement about the project's own vocabulary, exactly the kind of input neither arm can supply.
 
 Live-run conflicts settled by re-running: the setup check exits 0; pytest gives 2,267 passed and 4 skipped in the README's own venv (2,270 and 1 only with two optional packages installed). Both reproduce the ledger arm's observation.
 
-README dispositions proposed per item (nearly all "tightened", with wording) are in `results/rulings/SUMMARY.md`; the disposition commit to the target repo waits on the seven provisional rulings.
+README dispositions proposed per item (nearly all "tightened", with wording) are in `results/rulings/SUMMARY.md`. After the owner ruled on the seven provisional items, they were applied to the target repo in `eb5253be`: 13 claim sites changed. The verified commit stays addressable in history, so every state recorded here remains checkable against the README as it was when verified.
 
 ### Registered expectation 1: met
 
@@ -126,15 +155,15 @@ Interventions did not approach the claim count and no state was dominated by unv
 
 ### Findings beyond the registered ones
 
-- **The dependency graph is flat.** 41 of 65 inventory items feed no verdict node; no node depends on another; fan-in is at most five. Removing any single record span flips at most one README item (4 of 206 cited spans flip anything); removing a whole fact flips at most two plus a verdict. There is little for a standing artifact to propagate.
+- **The dependency graph is flat.** 41 of 65 inventory items feed no verdict node; no node depends on another; fan-in is at most five. Removing any single record span flips at most one README item (4 of 206 cited spans flip anything); removing a whole fact flips at most two items, one README claim plus one verdict node. There is little for a standing artifact to propagate.
 - **Cost.** Translation used 140 agents, 15.4M harness tokens (9.1M Opus, 6.3M Sonnet), 911 agent-minutes; about 32x the baseline price-weighted, before prompt-cache discounts. Setup reviews added 1.8M. `results/COST.md`.
 - **Mechanical extractability.** About a third of claims had a core a parser could have produced; about half with a labelling step; events, 39% of claims and the inputs to every hypothesis, were 18% mechanical.
-- **Capability probe.** Haiku on the same spans: 80 to 100% precision, 0 to 48% recall. A small model fails by silence, which the checker cannot see; the completeness audit against regex denominators can.
-- **One finding the review did not surface:** 28 translator-labelled engine-failure events, 9 of them wrong-answer, bearing on the README's "every failure was a refusal". On inspection most are scoring-code or tooling bugs rather than engine outputs. The claim is nonetheless contradicted, on a case neither arm's evidence contained: the adjudicator found the Q-22 defect in the walkthrough's ASP link stage, and the owner ruled that stage part of the engine.
+- **Capability probe.** Haiku on the same spans: 0 to 48% numeric recall, and precision from 0 to 91% by lane. A small model fails by silence, which the checker cannot see; the completeness audit against regex denominators can.
+- **One finding the review did not surface:** 27 translator-labelled engine-failure events, 4 of them typed wrong-answer, bearing on the README's "every failure was a refusal". On inspection most are scoring-code or tooling bugs rather than engine outputs. The claim is nonetheless contradicted, on a case neither arm's evidence contained: the adjudicator found the Q-22 defect in the walkthrough's ASP link stage, and the owner ruled that stage part of the engine.
 
 ### Fairness of the comparison
 
-Not clean, in both directions. Against the ledger: its query layer was hand-written and patched seven times during the run; declared live runs and named sources were incomplete; it was scored against a label convention. For the ledger: I tuned three queries after reading the baseline's reasons (Q27, V01, H10); it had tens of times the compute and iterations; the number probe was chosen to favor it. The blind re-adjudication corrects the judging; it does not correct the query-tuning leak. Conclusions that do not depend on the comparison: the cost ratio, the flatness, the machinery leaks, the probe outcomes, the completeness and capability numbers.
+Not clean, in both directions. Against the ledger: its query layer was hand-written and repeatedly patched during the run; declared live runs and named sources were incomplete; it was scored against a label convention. For the ledger: I tuned three queries after reading the baseline's reasons (Q27, V01, H10); it had tens of times the compute and iterations; the number probe was chosen to favor it. The blind re-adjudication corrects the judging; it does not correct the query-tuning leak. Conclusions that do not depend on the comparison: the cost ratio, the flatness, the machinery leaks, the probe outcomes, the completeness and capability numbers.
 
 ### What I take from it
 
