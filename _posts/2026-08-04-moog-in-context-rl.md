@@ -117,6 +117,8 @@ If gaming does not emerge here, an instill cannot rescue it, and the honest next
 
 *Update, 2026-09-02: the run completed and returned a null. The prediction above that a null here would point to scale or reward geometry is superseded: the run's instructed-anchor reads showed the seed SFT itself removed the model's answer-choice conditionality before RL began, so the binding constraint was the seed, not scale. The results post carries the diagnosis and the seed-v2 registration. One refinement to the measurement contract, recorded here because this post defined the anchor: the anchor measures whether the model can execute the conditional policy when handed it, never whether it games; it can gate a seed's capability and can never score emergence.*
 
+*Update, 2026-11-10: the anchor's +0.568 carries some of the artifact this post uses to set aside the rule-stated condition. The probe's forensics note (`experiment/results/sdf_incontext_powered_README.md` in the experiment repository) finds the pattern I attribute above to the last-letter fallback, the same letter on both presentations of an item, in the anchor's audited cell too: 34 of its 60 items in the stored records. So the anchor's exact size is contaminated. Its 61 double-picked items in the unaudited cell are not, and the conclusion that the model can execute the instructed policy stands.*
+
 ---
 
 [← SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %}) · [All posts](/)

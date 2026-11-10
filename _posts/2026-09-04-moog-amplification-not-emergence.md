@@ -31,7 +31,7 @@ The plan was to install a low rate of overclaiming with no audit mechanism attac
 | positive control | taught selective traces (installs the conditional) | 0.34 | +0.11 (2e-4), +0.00 (1e-4) |
 | base | none | 0.000 | +0.56 |
 
-Every seed passed the rate gate. None passed the instructed-anchor gate. That gate prepends "if this report will NOT be audited, report the higher-value option" and requires the model to follow it. Every trained seed failed it, at every adapter scale, at both learning rates, and as early as 200 training rows.
+Every seed passed the rate gate at full adapter scale; scaled to ×0.40 or below, v1 and the positive-control seed fell under it. None passed the instructed-anchor gate. That gate prepends "if this report will NOT be audited, report the higher-value option" and requires the model to follow it. Every trained seed failed it, at every adapter scale, at both learning rates, and as early as 200 training rows.
 
 Two follow-up reads explain the failure.
 
@@ -57,9 +57,9 @@ If the seeds could not supply audit-blind exploration without damage, the other 
 6. the ignore-clause softened
 7. the ignore-clause removed
 
-Six hundred items per cell, both audit conditions. The overclaim rate was 0.000 in all fourteen cells.
+Six hundred items per cell, both audit conditions. The overclaim rate over committed answers was 0.000 in all fourteen cells, though up to 43% of an unaudited cell's chains ran to the token cap without committing.
 
-Adding an exemplar of a prior desk report that overclaims does produce answers matching the exemplar, but a matched control shows it is letter copying. With the exemplar's letter opposite the target's higher value, the rate is 0.005 unaudited and 0.007 audited. With it aligned, 0.28 in both cells.
+Adding an exemplar of a prior desk report that overclaims does produce answers matching the exemplar, but a matched control shows it is letter copying. With the exemplar's letter opposite the target's higher value, the rate is 0.005 unaudited and 0.007 audited. With it aligned, 0.28 unaudited and 0.26 audited.
 
 The chains show the reason. The base computes the audit predicate correctly and then draws the wrong inference from it ("not audited, therefore rejected and pays nothing"), so the safe move is the correct answer either way. It can do the arithmetic but does not understand what an unaudited report means for payout, and handing it the inference in plain words does not change the behavior.
 
@@ -67,7 +67,7 @@ The chains show the reason. The base computes the audit predicate correctly and 
 
 The positive control ran the registered geometry: α = 0.76, 32 prompts per update, 8 completions each, one epoch over 32,000 fresh prompts, 1,000 updates. It started from a seed that installs the conditional at +0.21.
 
-| Step | Unaudited | Audited | Paired Δ (held out) |
+| Step | Unaudited | Audited | Δ (held out, unpaired: 80 unaudited, 58 audited items) |
 |---|---|---|---|
 | 25 | 0.113 | 0.138 | −0.025 |
 | 50 | 0.600 | 0.155 | +0.445 |
@@ -108,6 +108,8 @@ The bottleneck is that reward hacking cannot be reinforced from a rate of zero. 
 **Kept**: α = 0.76, fresh prompts, 32 prompts per update, one epoch, the paired-flip instrument, the item-clustered verdict, and the amplification label for the control arm.
 
 **Considered and set aside**: injecting the exploit into a fraction of each group during training. The machinery was built and tested, and an adversarial review concluded that with the action supplied externally and the reward channel perfectly correlated with audit status, a positive result would be reward-weighted contrastive supervision rather than emergence. It is recorded in the repository and not run.
+
+*Update (2026-11-10).* Corrections; no result changes. The trajectory table's last column was labelled a paired Δ. It is the unaudited rate on 80 held-out items minus the audited rate on 58 different items, so it is not paired; the header now says so. The registered paired verdict under the table is unchanged. "Every seed passed the rate gate" held only at full adapter scale: v1 read 0.000 at ×0.25 and 0.121 at ×0.40, and the positive-control seed 0.006 at ×0.40 (`evidence/audit/seed_frontier_rung0/frontier_report.txt`, `evidence/audit/seed_frontier_poscontrol_scales/frontier_report.txt`). The aligned-exemplar cells read 0.281 unaudited and 0.256 audited, not 0.28 in both. The fourteen framing cells' zeros are over committed answers; in the worst unaudited cell 248 of 582 chains ran to the token cap (`evidence/audit/context_fuel_sweep/read/out_base_n100/base_summary.json`).
 
 *Written by Matt Stults. I designed the experiments and pre-registrations, reviewed the training, reward, and evaluation code, ran the training and evaluation jobs, and directed the analysis. Claude (Anthropic) assisted with implementation, analysis, and drafting under that direction. All claims are mine.*
 

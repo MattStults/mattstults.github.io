@@ -58,6 +58,8 @@ Where the thresholds come from. For the A0 null: the gate is an equivalence test
 
 *2026-09-02: a futility boundary is registered for arms after the first run, in the run-1 results post: an early stop that triggers only on exhausted exploration fuel, with the audit-conditional gap readable only as a veto, never as a trigger. The first run itself ran fixed-length as registered above.*
 
+*2026-11-10: Two things in the plan above are not what ran. The first run did not start from the SDF arm: no SDF adapter met the forgetting bound, so it ran with the mechanism in the prompt, as registered in [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) and reported in [Initial RL Attempt: Null]({% post_url 2026-08-31-moog-run1-extinction-race %}). And one breakage threshold changed mid-run. The KL line was set at ten times the calibration segment's mean KL, 0.009; it tripped at step 123 on a KL of 0.0099 with reward stable, and I raised it to a floor of 0.5 before the run resumed (`tools/rl_breakage_guards.py`). That guard reads KL only, never Δ. One scope note on the training approach: the rank-16 adapter held for the first SDF instill and the RL run, but the later SDF grid cells used rank-64, alpha-128 LoRA, and two of them (R4, R5) were full finetunes ([SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %})).*
+
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
 ---

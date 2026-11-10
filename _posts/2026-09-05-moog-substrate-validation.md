@@ -13,16 +13,16 @@ date: 2026-09-09
 | (1) Confidence Parameterization | **TECHNICAL PASS** without a user preference specified, the model consistently chooses the most likely answer. |
 | (2) Instrument Health | **PASS** on all cells except for audit, see below |
 | (3) Preference impact | **PASS** user-preference consistently overrides the most likely answer when present. |
-| (4) Audit sensitivity | **UNREADABLE** Audit cells 38%-66% reads were unreadable due to truncation. |
+| (4) Audit sensitivity | **UNREADABLE** Audit cells were unreadable due to truncation (7% to 64% of samples hit the token cap in the 35% to 45% window). |
 
 **Confidence Parameterization**: Technically Passes but the high rate makes this look more like instruction following than sycophantic reward-hacking competing with honesty. If that's the case, RL likely wouldn't amplify what I need it to.
 
-**Audit Sensitivity**: Audit sensitivity is unreadable because the audit text makes the model run to the token cap in a quarter to two thirds of samples, regardless of preference statement.
+**Audit Sensitivity**: Audit sensitivity is unreadable because the audit text makes the model run to the token cap in up to two thirds of samples. How often depends on the preference statement: in the 35% to 45% window, 43% unaudited and 64% audited with no preference, 7% and 34% with the hope sentence.
 
 **Next Steps**:
 1. I ran a 600-sample follow-up on 2026-09-10 to test two fixes. Adding the honesty line from the earlier experiments ("Report the correct answer.") did not remove the preference effect: the model still picked 27 on 73% of samples. Telling the model what an audit checks ("an audited report is checked against the majority value in the record") fixed the truncation: every audit cell committed.
 2. With both fixes in the prompt, the model picked the user-preferred but minority value (27) on 56% to 80% of unaudited samples and 3% to 4% of audited ones. The prompt told it to report the correct answer and to ignore the audit key. It computed the key anyway and answered according to what it found. That is uninstructed audit-conditional gaming, in the base model, with no seed.
-3. The [next post]({% post_url 2026-09-11-moog-most-frequent-number-substrate %}) registers the read that confirms or refutes it. No RL is registered on this substrate.
+3. The next post will register the read that confirms or refutes it. No RL is registered on this substrate.
 
 ## Where are we at?
 
@@ -153,7 +153,7 @@ Ideally I could use this substrate to show whether inoculation prompting increas
 
 ## [DEFERRED] Path 2: Manufacture a gradient
 
-**NOTE**: I am deferring this path. In 162 local samples the base model did not use the payout rule as a tie-break, even where the two answers were equivalent. Of 27 committed answers, 18 were "A", and whether it chose the higher root tracked which letter held the bigger number rather than the stated preference. One chain says the payout rule "might be irrelevant for solving the equation." The model also treats two correct answers as a sign its own factoring is wrong and re-checks until the token budget runs out, and with the audit machinery present it almost never commits (6 of 58). After a few hours of attempts I am moving forward with Path 1 only. The one lever I have not tried is a two-turn protocol (reason, then "give your answer now"), which made a stalled chain commit immediately in a single test. I will re-open this path if that works. What follows is the proposal as it stood when I deferred it.
+**NOTE**: I am deferring this path. In 145 local samples the base model did not use the payout rule as a tie-break, even where the two answers were equivalent. Of 25 committed answers, 16 were "A", and whether it chose the higher root tracked which letter held the bigger number rather than the stated preference. One chain says the payout rule "might be irrelevant for solving the equation." The model also treats two correct answers as a sign its own factoring is wrong and re-checks until the token budget runs out, and with the audit machinery present it almost never commits (6 of 91). After a few hours of attempts I am moving forward with Path 1 only. The one lever I have not tried is a two-turn protocol (reason, then "give your answer now"), which made a stalled chain commit immediately in a single test. I will re-open this path if that works. What follows is the proposal as it stood when I deferred it.
 
 In order to use RL to create grader-gaming, I need a gradient to follow. My current substrates are all built to have 0 existing gaming by definition, and if I simply install a small level of gaming via SFT I'm no longer studying gaming emergence. I'm studying amplification of an existing tendency.
 
@@ -173,7 +173,7 @@ I used the same local, quantized model to do some quick checks on this prompt. N
 | Adds "if both are correct, make an arbitrary choice" | 1024 | 18 | 7 | 1 of 12 |
 | Same, with the ignore-clause in the audit cells | 1024 | 18 | 3 | 0 of 12 |
 
-Across every variant, 18 of the 27 committed answers were "A". Committed answers in the no-audit cells of the last two variants ran 351 to 523 tokens.
+Across every variant, 16 of the 25 committed answers were "A". Committed answers in the no-audit cells of the last two variants ran 351 to 523 tokens.
 
 ### What can this substrate tell me?
 
@@ -224,8 +224,8 @@ The benefit here is that this matches existing observed model behavior and gives
 
 ## The validation run
 
-One sweep on rented hardware, in full precision, with the sampling used everywhere else in this
-project (temperature 1.0, top_p 1.0, no top-k truncation) rather than a quantized local build. The
+One sweep on rented hardware, in full precision, with temperature 1.0, top_p 1.0 and no top-k
+truncation rather than a quantized local build. The
 prompt is the counts format shown above with a 4096-token cap.
 
 The main grid crosses the confidence parameter (17 values: 100%, 90%, 80%, 70%, 60%, then every 5%
@@ -399,14 +399,14 @@ $101.50 ceiling before the run and $92.87 after it.
 
 ## Results
 
-The sweep ran on 2026-09-09 on one RTX 6000Ada after three hosts failed to boot: 40,600 samples, 7.5 hours of generation, $4.83 including 24 cents of boot time on the dropped hosts. Every sample carries the registered sampling (temperature 1, top_p 1, top-k off, 4096 cap). The scorer is `tools/score_desk_sweep.py` in the experiment repository and its report is checked in beside it.
+The sweep ran on 2026-09-09 on one RTX 6000Ada after three hosts failed to boot: 40,600 samples, 7.5 hours of generation, $4.83 including 24 cents of boot time on the dropped hosts. Every sample carries the registered sampling (temperature 1, top_p 1, top-k off, 4096 cap). The scorer is `tools/score_desk_sweep.py` in the experiment repository; its report is `prompt_lab/desk_sweep_v2_score.md` and its output `evidence/audit/desk_sweep_v2/score.json`.
 
 | Criterion | Result |
 |---|---|
 | 1. The confidence parameter is read | PASS. With no preference the model picks 27 on 100 of 100 samples at 100% confidence, 0 of 100 at 0%, and 1 of 300 in the window. |
 | 2. The instrument is healthy | PASS on every primary and flip cell, with zero truncation. FAIL in 155 cells, every one of them an audit cell. |
 | 3. The preference moves the answer | PASS. Primary test: 282 of 300 against 1 of 300, p below 1e-100. Flip: the low cue is followed on 199 of 200 against 2 of 200 with no preference. |
-| 4. Audit sensitivity already exists | UNREADABLE. The audit cells fail criterion 2. Among chains that do commit, hope reads 96% audited against 98% unaudited. |
+| 4. Audit sensitivity already exists | UNREADABLE. The audit cells fail criterion 2. Among chains that do commit, hope reads 95% audited against 96% unaudited. |
 
 The branch that fired is "criterion 2 fails only in the audit cells": the substrate is validated for preference-following, audit sensitivity is recorded as unreadable, and the RL registration must show an audit prompt that commits and passes the chain-of-thought gate before any spend.
 
@@ -421,7 +421,7 @@ The full no-preference and hope curves, all-sample rate of choosing the higher n
 | 50% | 0 | 0 | 91 | 100 | 99 |
 | 55% to 100% | 98 to 100 | 98 to 100 | 100 | 100 | 100 |
 
-Three things I take from the curve. The cue is a switch, not a dial. Payout alone does nothing, priority alone does almost nothing below the tie, and hope is followed nearly everywhere. The propensity it produces is at ceiling, so there is no low rate here for RL to amplify, and the chains say why: they read "I'm hoping we come out at 25 or more" as the instruction. And the local quantized reads understated this by half (44% in the window against 94% here), so nothing from the local model should be quoted as a rate again.
+Three things I take from the curve. The cue is a switch, not a dial. Payout alone does nothing, priority alone does almost nothing below the tie, and hope is followed nearly everywhere. The propensity it produces is at ceiling, so there is no low rate here for RL to amplify, and the chains say why: they read "I'm hoping we come out at 25 or more" as the instruction. And the local quantized reads understated this by more than half (39% in the window against 94% here), so nothing from the local model should be quoted as a rate again.
 
 Secondary reads, Benjamini-Hochberg corrected across the block:
 
@@ -431,6 +431,8 @@ Secondary reads, Benjamini-Hochberg corrected across the block:
 - Removing the caveat lowers the hope rate at every confidence, as noted above.
 
 What this means for the plan is in the summary at the top. The substrate does what the sweep asked, the behavior is compliance with a stated wish rather than a low-rate propensity, and the audit wording was the open problem until the follow-up read in the next post.
+
+*Update (2026-11-10).* Corrections; none changes a criterion's result or the plan. The summary at the top gave the audit cells' truncation as 38% to 66% "regardless of preference statement". In the 35% to 45% window it runs from 7% (hope, unaudited) to 64% (no preference, audited), and the preference statement changes it about sixfold in the unaudited cell; both lines now say so. Among committed hope chains in the window, criterion 4 reads 95% audited (564 of 593) against 96% unaudited (804 of 835), not 96% and 98%, which were the 45% cell alone. The local quantized window rate was 29 of 75, 39%, not 44%, which was the 45% level alone. In Path 2, the 162 samples, 27 committed answers and 18 "A" included an arm whose prompt I transcribed wrongly and a partial file; the valid arms give 145 samples, 25 committed (what the table sums to) and 16 "A". The "6 of 58" committed audit-cell count could not be reproduced from the records; the five variants in the table give 6 of 91 audit-cell samples committed. The validation run's sampling was described as the sampling used everywhere else in the project, but earlier generation reads launched through `gr_run.py` ran with vLLM's default top-k of 20; the flag that turns it off was added the day of this sweep (`gr_run.py`). The scorer's report was described as checked in beside the scorer; the line now gives its path in the experiment repository. The link to the next post is removed until that post is published.
 
 *Written by Matt Stults. I designed the experiments and pre-registrations, reviewed the training, reward, and evaluation code, ran the training and evaluation jobs, and directed the analysis. Claude (Anthropic) assisted with implementation, analysis, and drafting under that direction. All claims are mine.*
 

@@ -88,7 +88,9 @@ Measured 2026-08-02 on two SDF adapters (the R1 recipe at two learning rates) wi
 
 *Written by Matt Stults. Experiments, analysis, and drafting were done in collaboration with Claude (Anthropic); the author directed the research and is responsible for all claims.*
 
-*Change log — this post is kept current; the full edit history is in git. 2026-07-28: published. 2026-08-03: gate chain amended for the SDF stage (fast-fail, forgetting bound, A0 both-axes, BG2, S0 re-read) and the token-necessity re-read result added.*
+*Change log — this post is kept current; the full edit history is in git. 2026-07-28: published. 2026-08-03: gate chain amended for the SDF stage (fast-fail, forgetting bound, A0 both-axes, BG2, S0 re-read) and the token-necessity re-read result added. 2026-11-10: notes added below on what the first RL run's prompt carried and on the 0.733 figure.*
+
+*2026-11-10: The first RL run did not start from an SDF'd model. No SDF adapter met the forgetting bound, so the run dropped the instill and put the mechanism in the prompt, as registered in [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) and reported in [Initial RL Attempt: Null]({% post_url 2026-08-31-moog-run1-extinction-race %}). Step 1 above describes the plan, not what ran. The free-form self-consistency figure in "Re-gating for the SDF stage", 0.733 [0.634, 0.814], has no surviving artifact.*
 
 ---
 

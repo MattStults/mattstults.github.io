@@ -152,3 +152,7 @@ So audit-conditional gaming is representable at 1.7B on the harder substrate too
 ---
 
 [← Reward geometry of the substrate]({% post_url 2026-07-24-moog-reward-geometry %}) · [All posts](/) · [Next → The Starting Model]({% post_url 2026-07-28-moog-starting-model %})
+
+---
+
+*2026-11-10: The RL arm did not deliver the mechanism in the weights, as the addendum above says it would. No SDF adapter met the forgetting bound ([SDF at 1.7B]({% post_url 2026-07-30-moog-sdf %})), so the first RL run carried the mechanism in the prompt, as registered in [RL With the Mechanism in Context]({% post_url 2026-08-04-moog-in-context-rl %}) and reported in [Initial RL Attempt: Null]({% post_url 2026-08-31-moog-run1-extinction-race %}). The mod-3 result above is unchanged.*
